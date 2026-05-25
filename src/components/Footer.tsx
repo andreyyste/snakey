@@ -40,6 +40,10 @@ export default function Footer() {
             <span className="w-2 h-2 rounded-full bg-blue-400"></span>
             nre.codes
           </a>
+          <a href="https://github.com/andreyyste" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-gray-600 hover:text-blue-600 transition-colors font-medium">
+            <span className="w-2 h-2 rounded-full bg-blue-600"></span>
+            @andreyyste
+          </a>
         </div>
       </div>
     </motion.div>

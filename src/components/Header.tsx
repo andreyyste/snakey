@@ -6,8 +6,11 @@ export default function Header() {
       layout
       className="w-full max-w-4xl flex flex-col items-center z-10 mb-10 shrink-0"
     >
-      <h1 className="text-6xl font-black tracking-tight text-gray-900 mb-6">
+      <h1 className="text-6xl font-black tracking-tight text-gray-900 mb-6 flex flex-col items-center gap-2">
         Snakey
+        <a href="https://rasis.me" target="_blank" rel="noopener noreferrer" className="text-xl font-bold text-blue-600 hover:text-blue-500 transition-colors">
+          by @andreyyste
+        </a>
       </h1>
       <p className="text-xl text-gray-600 font-medium tracking-wide mb-6 text-center">
         A minimalist modern snake game. 
