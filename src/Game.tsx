@@ -13,7 +13,7 @@ export default function Game({ onScoreUpdate }: { onScoreUpdate: (score: number)
       width: 800,
       height: 600,
       parent: gameRef.current,
-      backgroundColor: '#ffffff', // Putih cerah
+      transparent: true,
       physics: {
         default: 'arcade',
         arcade: {

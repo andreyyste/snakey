@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Game from './Game';
 import Header from './components/Header';
@@ -24,6 +24,7 @@ function App() {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
+            id="score-display"
             className="mb-4 z-20 flex items-center gap-3 bg-white px-6 py-2 rounded-full shadow-md border border-gray-100 shrink-0"
           >
             <div className="w-4 h-4 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)]"></div>
@@ -34,8 +35,9 @@ function App() {
 
       <motion.div
         layout
+        id="game-container-shell"
         data-playing={isPlaying}
-        className="z-20 relative flex items-center justify-center bg-white shadow-xl overflow-hidden data-[playing=false]:rounded-full data-[playing=true]:rounded-2xl border border-gray-200 shrink-0"
+        className="z-20 relative flex items-center justify-center overflow-hidden shrink-0 bg-white shadow-xl data-[playing=false]:rounded-full data-[playing=true]:rounded-2xl border border-gray-200 pointer-events-auto"
         initial={{ borderRadius: "9999px" }}
         animate={{
           width: isPlaying ? 800 : 220,
@@ -67,7 +69,7 @@ function App() {
             >
               <button 
                 onClick={() => setIsPlaying(false)}
-                className="absolute top-4 right-4 z-50 text-gray-400 hover:text-gray-900 transition-colors bg-gray-100 hover:bg-gray-200 rounded-full w-8 h-8 flex items-center justify-center"
+                className="absolute top-4 right-4 z-50 text-gray-400 hover:text-gray-900 transition-colors bg-gray-100 hover:bg-gray-200 rounded-full w-8 h-8 flex items-center justify-center pointer-events-auto"
               >
                 ✕
               </button>
