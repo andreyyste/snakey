@@ -32,13 +32,13 @@ export default function Footer() {
           Have an idea to make this even crazier? Or found a bug where the snake ate your cursor? Let me know!
         </p>
         <div className="flex flex-col gap-3 text-sm">
-          <a href="#" className="flex items-center gap-2 text-gray-600 hover:text-blue-600 transition-colors font-medium">
+          <a href="mailto:manurungandre1927@gmail.com" className="flex items-center gap-2 text-gray-600 hover:text-blue-600 transition-colors font-medium">
             <span className="w-2 h-2 rounded-full bg-blue-500"></span>
-            hello@snakey.app
+            manurungandre1927@gmail.com
           </a>
-          <a href="#" className="flex items-center gap-2 text-gray-600 hover:text-blue-600 transition-colors font-medium">
+          <a href="https://nre.codes" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-gray-600 hover:text-blue-600 transition-colors font-medium">
             <span className="w-2 h-2 rounded-full bg-blue-400"></span>
-            @SnakeyGame
+            nre.codes
           </a>
         </div>
       </div>
