@@ -1,5 +1,7 @@
 # 🐍 Snakey - Escape The Matrix
 
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-rasis.me-blue?style=for-the-badge)](https://rasis.me)
+
 A modern twist on the classic Snake game, built with **React**, **Vite**, **Tailwind CSS**, and **Phaser 3**.
 What starts as a simple, confined 800x600 arcade game quickly turns into an interactive web-breaking experience where the snake breaks out of its canvas and consumes the actual DOM elements of the website.
 
