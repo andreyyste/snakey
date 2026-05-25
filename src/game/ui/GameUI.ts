@@ -12,33 +12,7 @@ export class GameUI {
   }
 
   public create() {
-    const scoreBg = this.scene.add.graphics();
-    scoreBg.fillStyle(0xf8fafc, 1);
-    scoreBg.lineStyle(2, 0xe2e8f0, 1);
-    scoreBg.fillRoundedRect(0, 0, 100, 44, 22);
-    scoreBg.strokeRoundedRect(0, 0, 100, 44, 22);
-
-    this.scoreText = this.scene.add.text(60, 22, '0', {
-      fontSize: '20px',
-      color: '#0f172a',
-      fontFamily: 'system-ui, -apple-system, sans-serif',
-      fontStyle: 'bold',
-      align: 'center'
-    }).setOrigin(0.5);
-
-    const scoreIcon = this.scene.add.image(24, 22, 'food').setScale(1.2);
-    this.scoreContainer = this.scene.add.container(20, 20, [scoreBg, scoreIcon, this.scoreText]).setDepth(100);
-  }
-
-  public updateScore(score: number) {
-    this.scoreText.setText(`${score}`);
-    this.scene.tweens.add({
-      targets: this.scoreContainer,
-      scaleX: 1.1,
-      scaleY: 1.1,
-      yoyo: true,
-      duration: 100
-    });
+    // Score dipindahkan ke React
   }
 
   public showGameOver() {

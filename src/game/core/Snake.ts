@@ -4,8 +4,12 @@ import { GRID_SIZE, CANVAS_WIDTH, CANVAS_HEIGHT, MOVE_INTERVAL } from '../consta
 export class Snake {
   private scene: Phaser.Scene;
   private segments: Phaser.GameObjects.Image[] = [];
+  private logicalPositions: Phaser.Math.Vector2[] = [];
   public direction: Phaser.Math.Vector2 = new Phaser.Math.Vector2(1, 0);
   public nextDirection: Phaser.Math.Vector2 = new Phaser.Math.Vector2(1, 0);
+  public fatScale: number = 1;
+  public stepSize: number = GRID_SIZE;
+  private readonly TEXTURE_SCALE = 0.2;
 
   constructor(scene: Phaser.Scene) {
     this.scene = scene;
@@ -17,12 +21,20 @@ export class Snake {
     const startY = Math.floor(CANVAS_HEIGHT / 2 / GRID_SIZE) * GRID_SIZE + offset;
 
     this.segments = [];
-    this.segments.push(this.scene.add.image(startX, startY, 'snake-head').setOrigin(0.5));
-    this.segments.push(this.scene.add.image(startX - GRID_SIZE, startY, 'snake-body').setOrigin(0.5));
-    this.segments.push(this.scene.add.image(startX - GRID_SIZE * 2, startY, 'snake-body').setOrigin(0.5));
+    this.logicalPositions = [];
+
+    this.logicalPositions.push(new Phaser.Math.Vector2(startX, startY));
+    this.logicalPositions.push(new Phaser.Math.Vector2(startX - GRID_SIZE, startY));
+    this.logicalPositions.push(new Phaser.Math.Vector2(startX - GRID_SIZE * 2, startY));
+
+    this.segments.push(this.scene.add.image(startX, startY, 'snake-head').setOrigin(0.5).setScale(this.fatScale * this.TEXTURE_SCALE));
+    this.segments.push(this.scene.add.image(startX - GRID_SIZE, startY, 'snake-body').setOrigin(0.5).setScale(this.fatScale * this.TEXTURE_SCALE));
+    this.segments.push(this.scene.add.image(startX - GRID_SIZE * 2, startY, 'snake-body').setOrigin(0.5).setScale(this.fatScale * this.TEXTURE_SCALE));
     
     this.direction.set(1, 0);
     this.nextDirection.set(1, 0);
+    this.fatScale = 1;
+    this.stepSize = GRID_SIZE;
   }
 
   public getSegments() {
@@ -34,69 +46,61 @@ export class Snake {
   }
 
   // Returns collision result and old tail position for growing
-  public move(): { dead: boolean, newX: number, newY: number, tailOldX: number, tailOldY: number } {
+  public move(duration: number): { dead: boolean, newX: number, newY: number, tailOldX: number, tailOldY: number } {
     this.direction.copy(this.nextDirection);
-    const head = this.segments[0];
     
-    const logicalHeadX = Math.round((head.x - GRID_SIZE / 2) / GRID_SIZE) * GRID_SIZE + GRID_SIZE / 2;
-    const logicalHeadY = Math.round((head.y - GRID_SIZE / 2) / GRID_SIZE) * GRID_SIZE + GRID_SIZE / 2;
+    const headPos = this.logicalPositions[0];
+    let newX = headPos.x + this.direction.x * this.stepSize;
+    let newY = headPos.y + this.direction.y * this.stepSize;
 
-    let newX = logicalHeadX + this.direction.x * GRID_SIZE;
-    let newY = logicalHeadY + this.direction.y * GRID_SIZE;
-
-    let tailOldX = 0, tailOldY = 0;
+    let tailOldPos = this.logicalPositions[this.logicalPositions.length - 1];
+    let tailOldX = tailOldPos.x;
+    let tailOldY = tailOldPos.y;
 
     // Wall collision
     if (newX >= CANVAS_WIDTH || newX < 0 || newY >= CANVAS_HEIGHT || newY < 0) {
       return { dead: true, newX, newY, tailOldX, tailOldY };
     }
 
-    // Self collision
-    for (let i = 1; i < this.segments.length - 1; i++) {
-      const seg = this.segments[i];
-      const segX = Math.round((seg.x - GRID_SIZE / 2) / GRID_SIZE) * GRID_SIZE + GRID_SIZE / 2;
-      const segY = Math.round((seg.y - GRID_SIZE / 2) / GRID_SIZE) * GRID_SIZE + GRID_SIZE / 2;
-      
-      if (Math.abs(newX - segX) < 2 && Math.abs(newY - segY) < 2) {
+    // Self collision (lenient hitbox)
+    for (let i = 1; i < this.logicalPositions.length - 1; i++) {
+      const pos = this.logicalPositions[i];
+      const dist = Phaser.Math.Distance.Between(newX, newY, pos.x, pos.y);
+      if (dist < this.stepSize * 0.4) {
         return { dead: true, newX, newY, tailOldX, tailOldY };
       }
     }
 
-    const tail = this.segments[this.segments.length - 1];
-    tailOldX = Math.round((tail.x - GRID_SIZE / 2) / GRID_SIZE) * GRID_SIZE + GRID_SIZE / 2;
-    tailOldY = Math.round((tail.y - GRID_SIZE / 2) / GRID_SIZE) * GRID_SIZE + GRID_SIZE / 2;
+    // Update logical positions backwards
+    for (let i = this.logicalPositions.length - 1; i > 0; i--) {
+      this.logicalPositions[i].copy(this.logicalPositions[i - 1]);
+    }
+    
+    // Update head logical position
+    this.logicalPositions[0].set(newX, newY);
 
-    // Move body
-    for (let i = this.segments.length - 1; i > 0; i--) {
-      const prev = this.segments[i - 1];
-      const targetX = Math.round((prev.x - GRID_SIZE / 2) / GRID_SIZE) * GRID_SIZE + GRID_SIZE / 2;
-      const targetY = Math.round((prev.y - GRID_SIZE / 2) / GRID_SIZE) * GRID_SIZE + GRID_SIZE / 2;
+    // Tween sprites to match logical positions
+    for (let i = 0; i < this.segments.length; i++) {
+      const target = this.logicalPositions[i];
+      const sprite = this.segments[i];
       
-      const dx = Math.abs(this.segments[i].x - targetX);
-      const dy = Math.abs(this.segments[i].y - targetY);
+      const dx = Math.abs(sprite.x - target.x);
+      const dy = Math.abs(sprite.y - target.y);
 
-      if (dx > GRID_SIZE * 1.5 || dy > GRID_SIZE * 1.5) {
-        this.segments[i].setPosition(targetX, targetY);
+      if (dx > this.stepSize * 1.5 || dy > this.stepSize * 1.5) {
+        sprite.setPosition(target.x, target.y);
       } else {
         this.scene.tweens.add({
-          targets: this.segments[i],
-          x: targetX,
-          y: targetY,
-          duration: MOVE_INTERVAL,
+          targets: sprite,
+          x: target.x,
+          y: target.y,
+          duration: duration,
           ease: 'Linear'
         });
       }
     }
-
-    // Move head
-    this.scene.tweens.add({
-      targets: head,
-      x: newX,
-      y: newY,
-      duration: MOVE_INTERVAL,
-      ease: 'Linear'
-    });
     
+    const head = this.segments[0];
     if (this.direction.x === 1) head.setAngle(0);
     else if (this.direction.x === -1) head.setAngle(180);
     else if (this.direction.y === 1) head.setAngle(90);
@@ -106,7 +110,21 @@ export class Snake {
   }
 
   public grow(tailOldX: number, tailOldY: number) {
+    this.logicalPositions.push(new Phaser.Math.Vector2(tailOldX, tailOldY));
     const newSegment = this.scene.add.image(tailOldX, tailOldY, 'snake-body').setOrigin(0.5);
+    newSegment.setScale(this.fatScale * this.TEXTURE_SCALE);
     this.segments.push(newSegment);
+  }
+
+  public fatten() {
+    this.fatScale += 0.3;
+    this.stepSize = GRID_SIZE * this.fatScale;
+    this.scene.tweens.add({
+      targets: this.segments,
+      scaleX: this.fatScale * this.TEXTURE_SCALE,
+      scaleY: this.fatScale * this.TEXTURE_SCALE,
+      duration: 300,
+      ease: 'Back.out'
+    });
   }
 }

@@ -29,26 +29,28 @@ export class SnakeScene extends Phaser.Scene {
 
   preload() {
     const graphics = this.make.graphics({ x: 0, y: 0, add: false });
+    const factor = 5;
+    const gs = GRID_SIZE * factor;
     
     // Body Ular
     graphics.fillStyle(0x3b82f6, 1);
-    graphics.fillRoundedRect(1, 1, GRID_SIZE - 2, GRID_SIZE - 2, 4);
-    graphics.generateTexture('snake-body', GRID_SIZE, GRID_SIZE);
+    graphics.fillRoundedRect(1 * factor, 1 * factor, gs - 2 * factor, gs - 2 * factor, 4 * factor);
+    graphics.generateTexture('snake-body', gs, gs);
     
     // Kepala Ular
     graphics.clear();
     graphics.fillStyle(0x1d4ed8, 1);
-    graphics.fillRoundedRect(1, 1, GRID_SIZE - 2, GRID_SIZE - 2, 6);
+    graphics.fillRoundedRect(1 * factor, 1 * factor, gs - 2 * factor, gs - 2 * factor, 6 * factor);
     graphics.fillStyle(0xffffff, 1);
-    graphics.fillCircle(GRID_SIZE - 5, 6, 2); 
-    graphics.fillCircle(GRID_SIZE - 5, GRID_SIZE - 6, 2); 
-    graphics.generateTexture('snake-head', GRID_SIZE, GRID_SIZE);
+    graphics.fillCircle(gs - 5 * factor, 6 * factor, 2 * factor); 
+    graphics.fillCircle(gs - 5 * factor, gs - 6 * factor, 2 * factor); 
+    graphics.generateTexture('snake-head', gs, gs);
     
     // Makanan
     graphics.clear();
     graphics.fillStyle(0xef4444, 1);
-    graphics.fillCircle(GRID_SIZE / 2, GRID_SIZE / 2, GRID_SIZE / 2 - 2);
-    graphics.generateTexture('food', GRID_SIZE, GRID_SIZE);
+    graphics.fillCircle(gs / 2, gs / 2, gs / 2 - 2 * factor);
+    graphics.generateTexture('food', gs, gs);
   }
 
   create() {
@@ -91,9 +93,13 @@ export class SnakeScene extends Phaser.Scene {
     this.handleInput();
 
     this.moveTimer += delta;
-    if (this.moveTimer >= MOVE_INTERVAL) {
-      this.processGameTick();
-      this.moveTimer = 0;
+    
+    // Scale interval by fatScale so velocity (px/sec) remains constant as stepSize increases
+    const currentInterval = MOVE_INTERVAL * this.snake.fatScale;
+    
+    if (this.moveTimer >= currentInterval) {
+      this.moveTimer -= currentInterval;
+      this.processGameTick(currentInterval);
     }
   }
 
@@ -126,8 +132,8 @@ export class SnakeScene extends Phaser.Scene {
     }
   }
 
-  private processGameTick() {
-    const { dead, newX, newY, tailOldX, tailOldY } = this.snake.move();
+  private processGameTick(duration: number) {
+    const { dead, newX, newY, tailOldX, tailOldY } = this.snake.move(duration);
 
     if (dead) {
       this.isGameOver = true;
@@ -137,11 +143,17 @@ export class SnakeScene extends Phaser.Scene {
     }
 
     // Check food collision
-    if (Math.abs(newX - this.food.sprite.x) < 2 && Math.abs(newY - this.food.sprite.y) < 2) {
+    const dist = Phaser.Math.Distance.Between(newX, newY, this.food.sprite.x, this.food.sprite.y);
+    if (dist < this.snake.stepSize * 0.8) {
       this.score += 10;
-      this.gameUI.updateScore(this.score);
+      this.game.events.emit('score-update', this.score);
       this.audioManager.playEatSound();
+      
+      if (this.score >= 70) {
+        this.snake.fatten();
+      }
       this.snake.grow(tailOldX, tailOldY);
+      
       this.food.reposition(this.snake);
     }
   }
