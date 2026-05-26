@@ -6,6 +6,7 @@ import { Snake } from './core/Snake';
 import { Food } from './core/Food';
 import { DomManager } from './systems/DomManager';
 import { InputManager } from './systems/InputManager';
+import { DomAnimator } from './systems/DomAnimator';
 
 export class SnakeScene extends Phaser.Scene {
   private snake!: Snake;
@@ -56,6 +57,11 @@ export class SnakeScene extends Phaser.Scene {
   }
 
   create() {
+    if (this.cameras && this.cameras.main) {
+      this.cameras.main.scrollX = 0;
+      this.cameras.main.scrollY = 0;
+    }
+
     this.audioManager = new AudioManager();
     this.audioManager.init();
 
@@ -78,10 +84,77 @@ export class SnakeScene extends Phaser.Scene {
     this.score = 0;
     this.moveTimer = 0;
 
-    this.sys.game.events.on('destroy', () => {
-      window.removeEventListener('scroll', this.handleScroll);
-    });
+    this.sys.game.events.once('destroy', this.onDestroy);
+    this.events.once('shutdown', this.onShutdown);
     window.addEventListener('scroll', this.handleScroll);
+  }
+
+  private onDestroy = () => {
+    window.removeEventListener('scroll', this.handleScroll);
+    this.restoreCanvas();
+  }
+
+  private onShutdown = () => {
+    window.removeEventListener('scroll', this.handleScroll);
+    this.restoreCanvas();
+  }
+
+  private restoreCanvas() {
+    this.isEscaped = false;
+    this.isGameOver = false;
+
+    const canvas = this.game.canvas;
+    const container = document.getElementById('phaser-game-container');
+    if (container) {
+      container.appendChild(canvas);
+    } else {
+      const shell = document.getElementById('game-container-shell');
+      if (shell) {
+        shell.appendChild(canvas);
+      }
+    }
+
+    // Reset canvas inline styles
+    canvas.style.position = '';
+    canvas.style.top = '';
+    canvas.style.left = '';
+    canvas.style.width = '';
+    canvas.style.height = '';
+    canvas.style.zIndex = '';
+    canvas.style.pointerEvents = '';
+
+    // Reset camera scroll
+    if (this.cameras && this.cameras.main) {
+      this.cameras.main.scrollX = 0;
+      this.cameras.main.scrollY = 0;
+    }
+
+    // Resize back to normal game size
+    this.scale.resize(800, 600);
+
+    // Clean up DomManager
+    if (this.domManager) {
+      this.domManager.destroy();
+    }
+
+    // Clear any running CSS animation timers to prevent memory leaks and style overrides
+    DomAnimator.clearAll();
+
+    // Restore DOM elements styles
+    const eatenElements = document.querySelectorAll('[data-eaten], [data-card-eaten], .card-eaten');
+    eatenElements.forEach((node) => {
+      const el = node as HTMLElement;
+      el.style.transform = '';
+      el.style.opacity = '';
+      el.style.visibility = '';
+      el.style.background = '';
+      el.style.borderColor = '';
+      el.style.boxShadow = '';
+      el.style.transition = '';
+      el.classList.remove('card-eaten');
+      delete el.dataset.eaten;
+      delete el.dataset.cardEaten;
+    });
   }
 
   private handleScroll = () => {
@@ -110,12 +183,16 @@ export class SnakeScene extends Phaser.Scene {
   }
 
   private processGameTick(duration: number) {
-    const { dead, newX, newY, tailOldX, tailOldY } = this.snake.move(duration, this.isEscaped);
+    const { dead, hitWall, newX, newY, tailOldX, tailOldY } = this.snake.move(duration, this.isEscaped);
 
     if (dead) {
-      this.isGameOver = true;
-      this.audioManager.playDieSound();
-      this.gameUI.showGameOver();
+      if (this.isEscaped && hitWall) {
+        this.triggerWebBroke();
+      } else {
+        this.isGameOver = true;
+        this.audioManager.playDieSound();
+        this.gameUI.showGameOver();
+      }
       return;
     }
 
@@ -170,14 +247,6 @@ export class SnakeScene extends Phaser.Scene {
       }
 
       this.audioManager.playEatSound();
-
-      if (this.domManager.getRemainingCount() <= 0) {
-        if (!this.finalPhaseStarted) {
-          this.startFinalPhase();
-        } else {
-          this.triggerWebBroke();
-        }
-      }
     }
   }
 
@@ -220,69 +289,28 @@ export class SnakeScene extends Phaser.Scene {
     this.domManager.init();
   }
 
-  private startFinalPhase() {
-    this.finalPhaseStarted = true;
-    
-    const scoreElement = document.getElementById('score-display');
-    if (scoreElement) {
-      scoreElement.style.border = '2px dashed red';
-      scoreElement.style.transition = 'all 0.5s ease';
-      
-      const rect = scoreElement.getBoundingClientRect();
-      this.domManager.addBody({
-        element: scoreElement,
-        body: new Phaser.Geom.Rectangle(rect.left + window.scrollX, rect.top + window.scrollY, rect.width, rect.height),
-        id: 'score-display-target',
-        hasBeenEaten: false,
-        type: 'finalTarget'
-      });
-    }
-    
-    const cursor = document.createElement('div');
-    cursor.style.position = 'fixed';
-    cursor.style.pointerEvents = 'none';
-    cursor.style.zIndex = '9999';
-    cursor.style.width = '40px';
-    cursor.style.height = '40px';
-    cursor.style.borderRadius = '50%';
-    cursor.style.border = '2px dashed red';
-    cursor.style.transform = 'translate(-50%, -50%)';
-    cursor.style.transition = 'transform 0.5s ease, opacity 0.5s ease';
-    document.body.appendChild(cursor);
-    
-    let cursorBody = new Phaser.Geom.Rectangle(0, 0, 40, 40);
-    this.domManager.addBody({
-      element: cursor,
-      body: cursorBody,
-      id: 'cursor-target',
-      hasBeenEaten: false,
-      type: 'finalTarget'
-    });
-
-    const onMouseMove = (e: MouseEvent) => {
-      cursor.style.left = e.clientX + 'px';
-      cursor.style.top = e.clientY + 'px';
-      cursorBody.setTo(e.clientX - 20 + window.scrollX, e.clientY - 20 + window.scrollY, 40, 40);
-    };
-    
-    window.addEventListener('mousemove', onMouseMove);
-    
-    this.sys.game.events.once('destroy', () => {
-      window.removeEventListener('mousemove', onMouseMove);
-    });
-  }
-
   private triggerWebBroke() {
     this.isGameOver = true;
+    
+    // Fade body background to black
+    document.body.style.backgroundColor = 'black';
+    document.body.style.transition = 'background-color 1s ease';
+
     const root = document.getElementById('root');
     if (root) {
-      root.style.transition = 'all 2s ease-in-out';
-      root.style.transform = 'rotate(15deg) scale(0.5) translateY(100vh)';
+      root.style.transition = 'all 2.5s cubic-bezier(0.55, 0.085, 0.68, 0.53)';
+      root.style.transform = 'rotate(25deg) scale(0) translateY(120vh)';
       root.style.opacity = '0';
-      root.style.filter = 'blur(10px)';
+      root.style.filter = 'blur(20px)';
     }
+
+    // Fade out game canvas
+    const canvas = this.game.canvas;
+    canvas.style.transition = 'opacity 1s ease';
+    canvas.style.opacity = '0';
+
     setTimeout(() => {
       window.location.reload();
-    }, 3000);
+    }, 3500);
   }
 }

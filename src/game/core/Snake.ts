@@ -44,7 +44,7 @@ export class Snake {
   }
 
   // Returns collision result and old tail position for growing
-  public move(duration: number, isEscaped: boolean = false): { dead: boolean, newX: number, newY: number, tailOldX: number, tailOldY: number } {
+  public move(duration: number, isEscaped: boolean = false): { dead: boolean, hitWall: boolean, newX: number, newY: number, tailOldX: number, tailOldY: number } {
     this.direction.copy(this.nextDirection);
     
     const headPos = this.logicalPositions[0];
@@ -56,19 +56,20 @@ export class Snake {
     let tailOldY = tailOldPos.y;
 
     // Wall collision
-    const boundsW = isEscaped ? document.documentElement.scrollWidth : CANVAS_WIDTH;
-    const boundsH = isEscaped ? document.documentElement.scrollHeight : CANVAS_HEIGHT;
+    let minX = 0;
+    let maxX = CANVAS_WIDTH;
+    let minY = 0;
+    let maxY = CANVAS_HEIGHT;
 
-    if (newX >= boundsW || newX < 0 || newY >= boundsH || newY < 0) {
-      if (isEscaped) {
-        // Optional wrap around or just die. Let's wrap around when escaped!
-        if (newX >= boundsW) newX = 0;
-        else if (newX < 0) newX = boundsW;
-        if (newY >= boundsH) newY = 0;
-        else if (newY < 0) newY = boundsH;
-      } else {
-        return { dead: true, newX, newY, tailOldX, tailOldY };
-      }
+    if (isEscaped) {
+      minX = window.scrollX;
+      maxX = window.scrollX + window.innerWidth;
+      minY = window.scrollY;
+      maxY = window.scrollY + window.innerHeight;
+    }
+
+    if (newX >= maxX || newX < minX || newY >= maxY || newY < minY) {
+      return { dead: true, hitWall: true, newX, newY, tailOldX, tailOldY };
     }
 
     // Self collision (lenient hitbox)
@@ -76,7 +77,7 @@ export class Snake {
       const pos = this.logicalPositions[i];
       const dist = Phaser.Math.Distance.Between(newX, newY, pos.x, pos.y);
       if (dist < this.stepSize * 0.4) {
-        return { dead: true, newX, newY, tailOldX, tailOldY };
+        return { dead: true, hitWall: false, newX, newY, tailOldX, tailOldY };
       }
     }
 
