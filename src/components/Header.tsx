@@ -17,7 +17,7 @@ export default function Header() {
       
       <div className="flex gap-4 justify-center text-sm text-gray-500 font-medium">
         <span className="px-4 py-2 bg-white rounded-lg shadow-sm border border-gray-100">Clean UI</span>
-        <span className="px-4 py-2 bg-white rounded-lg shadow-sm border border-gray-100">React 18</span>
+        <span className="px-4 py-2 bg-white rounded-lg shadow-sm border border-gray-100">React 19</span>
         <span className="px-4 py-2 bg-white rounded-lg shadow-sm border border-gray-100">Phaser 3</span>
       </div>
     </motion.div>
