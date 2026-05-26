@@ -6,11 +6,17 @@ import Footer from './components/Footer';
 
 function App() {
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
   const [score, setScore] = useState(0);
 
   const handlePlay = () => {
     setScore(0);
     setIsPlaying(true);
+  };
+
+  const handleClose = () => {
+    setIsPlaying(false);
+    setIsExpanded(false);
   };
 
   return (
@@ -45,6 +51,11 @@ function App() {
           borderRadius: isPlaying ? "16px" : "9999px",
         }}
         transition={{ type: "spring", stiffness: 200, damping: 25, mass: 1 }}
+        onAnimationComplete={() => {
+          if (isPlaying) {
+            setIsExpanded(true);
+          }
+        }}
       >
         <AnimatePresence mode="wait">
           {!isPlaying ? (
@@ -60,21 +71,23 @@ function App() {
               Play Game
             </motion.button>
           ) : (
-            <motion.div
-              key="game"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.4, delay: 0.2 }}
-              className="w-full h-full relative"
-            >
-              <button 
-                onClick={() => setIsPlaying(false)}
-                className="absolute top-4 right-4 z-50 text-gray-400 hover:text-gray-900 transition-colors bg-gray-100 hover:bg-gray-200 rounded-full w-8 h-8 flex items-center justify-center pointer-events-auto"
+            isExpanded && (
+              <motion.div
+                key="game"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.3 }}
+                className="w-full h-full relative"
               >
-                ✕
-              </button>
-              <Game onScoreUpdate={setScore} />
-            </motion.div>
+                <button 
+                  onClick={handleClose}
+                  className="absolute top-4 right-4 z-50 text-gray-400 hover:text-gray-900 transition-colors bg-gray-100 hover:bg-gray-200 rounded-full w-8 h-8 flex items-center justify-center pointer-events-auto"
+                >
+                  ✕
+                </button>
+                <Game onScoreUpdate={setScore} />
+              </motion.div>
+            )
           )}
         </AnimatePresence>
       </motion.div>

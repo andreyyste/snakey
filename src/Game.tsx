@@ -33,5 +33,5 @@ export default function Game({ onScoreUpdate }: { onScoreUpdate: (score: number)
     };
   }, [onScoreUpdate]);
 
-  return <div ref={gameRef} className="w-full h-full" />;
+  return <div ref={gameRef} id="phaser-game-container" className="w-full h-full relative flex items-center justify-center overflow-hidden" />;
 }
