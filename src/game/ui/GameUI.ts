@@ -16,6 +16,11 @@ export class GameUI {
   }
 
   public showGameOver() {
+    // Prevent overlay stacking if showGameOver is called multiple times
+    if (this.gameOverContainer) {
+      this.gameOverContainer.destroy();
+    }
+
     const overlay = this.scene.add.rectangle(CANVAS_WIDTH/2, CANVAS_HEIGHT/2, CANVAS_WIDTH, CANVAS_HEIGHT, 0xffffff, 0.8);
     
     const box = this.scene.add.graphics();

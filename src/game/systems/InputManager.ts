@@ -26,6 +26,9 @@ export class InputManager {
   }
 
   public handleInput(snake: Snake) {
+    // Early return if keyboard input is not initialized or supported in the current environment
+    if (!this.cursors || !this.wasd) return;
+
     if ((this.cursors.left.isDown || this.wasd.left.isDown) && snake.direction.x === 0) {
       this.audioManager.init();
       if (snake.nextDirection.x !== -1) {

@@ -77,8 +77,11 @@ export class Food {
     let rx = 0;
     let ry = 0;
     const margin = GRID_SIZE * 2;
+    let attempts = 0;
+    const maxAttempts = 100; // Cap attempts to prevent infinite loop hangs if the board becomes saturated
 
-    while (!valid) {
+    while (!valid && attempts < maxAttempts) {
+      attempts++;
       rx = Phaser.Math.Between(margin, CANVAS_WIDTH - margin);
       ry = Phaser.Math.Between(margin, CANVAS_HEIGHT - margin);
 
