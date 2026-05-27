@@ -8,6 +8,11 @@ import { DomManager } from './systems/DomManager';
 import { InputManager } from './systems/InputManager';
 import { DomAnimator } from './systems/DomAnimator';
 
+/**
+ * SnakeScene represents the primary Phaser 3 scene containing the game loop, 
+ * graphics preloading, coordinate translations, game state transitions, 
+ * and DOM chomp orchestration.
+ */
 export class SnakeScene extends Phaser.Scene {
   private snake!: Snake;
   private food!: Food;
@@ -26,15 +31,21 @@ export class SnakeScene extends Phaser.Scene {
     super('SnakeScene');
   }
 
+  /**
+   * Preloads textures and dynamic textures.
+   * Generates procedural pixel graphics on the fly to avoid asset dependency lags.
+   */
   preload() {
     const graphics = this.make.graphics({ x: 0, y: 0, add: false });
     const factor = 5;
     const gs = GRID_SIZE * factor;
 
+    // Procedural snake body texture
     graphics.fillStyle(0x3b82f6, 1);
     graphics.fillRoundedRect(1 * factor, 1 * factor, gs - 2 * factor, gs - 2 * factor, 4 * factor);
     graphics.generateTexture('snake-body', gs, gs);
 
+    // Procedural snake head texture (with eyes)
     graphics.clear();
     graphics.fillStyle(0x1d4ed8, 1);
     graphics.fillRoundedRect(1 * factor, 1 * factor, gs - 2 * factor, gs - 2 * factor, 6 * factor);
@@ -43,11 +54,13 @@ export class SnakeScene extends Phaser.Scene {
     graphics.fillCircle(gs - 5 * factor, gs - 6 * factor, 2 * factor);
     graphics.generateTexture('snake-head', gs, gs);
 
+    // Procedural normal food texture
     graphics.clear();
     graphics.fillStyle(0xef4444, 1);
     graphics.fillCircle(gs / 2, gs / 2, gs / 2 - 2 * factor);
     graphics.generateTexture('food', gs, gs);
 
+    // Procedural special escape pill texture
     graphics.clear();
     graphics.fillStyle(0x000000, 1);
     graphics.fillRoundedRect(gs / 4, gs / 4, gs / 2, gs / 2, 4 * factor);
@@ -56,6 +69,9 @@ export class SnakeScene extends Phaser.Scene {
     graphics.generateTexture('special-food', gs, gs);
   }
 
+  /**
+   * Initializes sub-managers, cores, scene events, and starts window event bindings.
+   */
   create() {
     if (this.cameras && this.cameras.main) {
       this.cameras.main.scrollX = 0;
@@ -84,6 +100,8 @@ export class SnakeScene extends Phaser.Scene {
     this.score = 0;
     this.moveTimer = 0;
 
+    // Automatically invoke restoration logic if the scene is shutdown or destroyed 
+    // to prevent visual glitches and memory leak carries.
     this.sys.game.events.once('destroy', this.onDestroy);
     this.events.once('shutdown', this.onShutdown);
     window.addEventListener('scroll', this.handleScroll);
@@ -99,6 +117,14 @@ export class SnakeScene extends Phaser.Scene {
     this.restoreCanvas();
   }
 
+  /**
+   * Restores the HTML document layout and style rules to their original values.
+   * - Moves the Phaser canvas element back inside the game wrapper container.
+   * - Removes all full-screen fixed styling from the canvas.
+   * - Resizes the scale manager back to the standard 800x600 layout.
+   * - Removes all dynamically injected background divs (.dynamic-card-bg).
+   * - Reads backup original styles from DOM elements dataset properties and restores them.
+   */
   private restoreCanvas() {
     this.isEscaped = false;
     this.isGameOver = false;
@@ -114,7 +140,7 @@ export class SnakeScene extends Phaser.Scene {
       }
     }
 
-    // Reset canvas inline styles
+    // Reset canvas inline styles to let them fall back to stylesheet defaults
     canvas.style.position = '';
     canvas.style.top = '';
     canvas.style.left = '';
@@ -129,15 +155,13 @@ export class SnakeScene extends Phaser.Scene {
       this.cameras.main.scrollY = 0;
     }
 
-    // Resize back to normal game size
     this.scale.resize(800, 600);
 
-    // Clean up DomManager
     if (this.domManager) {
       this.domManager.destroy();
     }
 
-    // Clear any running CSS animation timers to prevent memory leaks and style overrides
+    // Terminate all pending background animations and timer loops
     DomAnimator.clearAll();
 
     // Restore DOM elements styles and clean up dynamic backgrounds
@@ -149,7 +173,7 @@ export class SnakeScene extends Phaser.Scene {
       el.style.visibility = '';
       el.style.transition = '';
       
-      // If it had a dynamic background set up, restore its original styles
+      // If it had a dynamic background set up, restore its original styles from backup datasets
       if (el.dataset.hasDynamicBg === 'true') {
         el.style.background = el.dataset.origBg || '';
         el.style.backgroundColor = el.dataset.origBgColor || '';
@@ -162,7 +186,7 @@ export class SnakeScene extends Phaser.Scene {
         el.style.borderLeft = el.dataset.origBorderLeft || '';
         el.style.borderRadius = el.dataset.origBorderRadius || '';
 
-        // Delete original style backup keys
+        // Delete style backup attributes
         delete el.dataset.hasDynamicBg;
         delete el.dataset.origBg;
         delete el.dataset.origBgColor;
@@ -189,6 +213,11 @@ export class SnakeScene extends Phaser.Scene {
     dynamicBgs.forEach((bg) => bg.remove());
   }
 
+  /**
+   * Tracks viewport scrolling during escape phase.
+   * Automatically shifts the camera scroll viewport bounds to follow 
+   * window scrolls if the player scrolls the page manually.
+   */
   private handleScroll = () => {
     if (this.isEscaped && this.cameras.main) {
       this.cameras.main.scrollX = window.scrollX;
@@ -214,10 +243,16 @@ export class SnakeScene extends Phaser.Scene {
     }
   }
 
+  /**
+   * Triggers logical movements for each tick duration.
+   * Decides which phase (normal vs escape) is active and runs colliders.
+   */
   private processGameTick(duration: number) {
     const { dead, hitWall, newX, newY, tailOldX, tailOldY } = this.snake.move(duration, this.isEscaped);
 
     if (dead) {
+      // If the snake is escaped and goes off the document scroll boundary, 
+      // trigger the website-breaking final transition.
       if (this.isEscaped && hitWall) {
         this.triggerWebBroke();
       } else {
@@ -235,6 +270,10 @@ export class SnakeScene extends Phaser.Scene {
     }
   }
 
+  /**
+   * Physics loop for the standard gameplay.
+   * Collision check against standard food coordinates inside the canvas.
+   */
   private processNormalPhase(newX: number, newY: number, tailOldX: number, tailOldY: number) {
     if (this.food.checkCollision(newX, newY, this.snake.stepSize)) {
       this.score += 10;
@@ -244,6 +283,7 @@ export class SnakeScene extends Phaser.Scene {
       this.snake.grow(tailOldX, tailOldY);
       this.food.reposition(this.snake);
 
+      // Spawn the escape pill when score threshold is crossed
       if (this.score >= 100) {
         this.food.spawnSpecial(this.snake);
       }
@@ -255,6 +295,10 @@ export class SnakeScene extends Phaser.Scene {
     }
   }
 
+  /**
+   * Physics loop for the escaped gameplay.
+   * Checks collisions against dynamic DOM elements on the entire webpage.
+   */
   private processEscapePhase(newX: number, newY: number, tailOldX: number, tailOldY: number) {
     const headRect = new Phaser.Geom.Rectangle(
       newX - this.snake.stepSize / 2,
@@ -271,12 +315,15 @@ export class SnakeScene extends Phaser.Scene {
         this.domManager.eatElement(domHit);
       });
 
-      // Directly update the original HTML score counter text
+      // Directly update the original HTML score counter text inside the DOM.
+      // We do this rather than emitting React score-update events because React re-renders 
+      // destroy the inline styles and eaten states injected onto DOM nodes.
       const scoreSpan = document.querySelector('#score-display span') as HTMLElement;
       if (scoreSpan) {
         scoreSpan.textContent = this.score.toString();
       }
 
+      // Grow the snake for every 10 points accumulated
       const previousTens = Math.floor(oldScore / 10);
       const currentTens = Math.floor(this.score / 10);
       for(let i=0; i < (currentTens - previousTens); i++){
@@ -287,6 +334,14 @@ export class SnakeScene extends Phaser.Scene {
     }
   }
 
+  /**
+   * Escapes the snake out of the canvas box onto the webpage.
+   * - Appends the Phaser canvas element directly to document.body.
+   * - Overrides canvas styles to fixed, full-viewport absolute overlays.
+   * - Resizes the canvas to match inner window size.
+   * - Translates all existing snake coordinates from relative canvas offsets 
+   *   to absolute window scroll viewport positions to ensure seamless graphical positioning.
+   */
   private triggerEscape() {
     this.isEscaped = true;
     this.food.hide();
@@ -296,9 +351,11 @@ export class SnakeScene extends Phaser.Scene {
 
     const canvas = this.game.canvas;
     const rect = canvas.getBoundingClientRect();
+    // Offset delta between canvas container coordinates and screen viewport coordinates
     const dx = rect.left + window.scrollX;
     const dy = rect.top + window.scrollY;
 
+    // Shift all graphics coordinates to line up on page viewport positions
     const segments = this.snake.getSegments();
     segments.forEach(seg => {
       this.tweens.killTweensOf(seg);
@@ -314,6 +371,7 @@ export class SnakeScene extends Phaser.Scene {
 
     document.body.appendChild(canvas);
     
+    // Lock canvas overlay styling
     canvas.style.position = 'fixed';
     canvas.style.top = '0px';
     canvas.style.left = '0px';
@@ -326,6 +384,11 @@ export class SnakeScene extends Phaser.Scene {
     this.domManager.init();
   }
 
+  /**
+   * Final transition sequence triggered when the snake crawls off the page limits.
+   * Collapses the entire website by rotating, blurring, shrinking, and sliding 
+   * the root container element down, then reloads the webpage.
+   */
   private triggerWebBroke() {
     this.isGameOver = true;
     

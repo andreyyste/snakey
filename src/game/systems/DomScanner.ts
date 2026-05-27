@@ -1,9 +1,28 @@
 import Phaser from 'phaser';
 import { IDomBody } from './DomManager';
 
+/**
+ * DomScanner is responsible for analyzing the HTML Document Object Model (DOM).
+ * It runs recursive tree-walking passes to split plain text content into individual 
+ * edible characters, detects interactive media elements, identifies visual card layouts, 
+ * and maps all coordinates into Phaser Geom bounds.
+ */
 export class DomScanner {
+  // A standard list of HTML tags that represent interactive, media, or structure elements 
+  // which will trigger unique custom chomp animations when eaten.
   private static targetSelector = 'img, svg, video, input, textarea, button, a, select, progress, meter, canvas, hr, iframe, audio';
 
+  /**
+   * Main scan function executed to refresh the world of edible elements.
+   * Runs in two phases:
+   * 1. Finds all text nodes and splits them into span characters.
+   * 2. Walk the tree to collect those characters, cards, and target elements.
+   * 
+   * @param scrollX Current viewport horizontal scroll offset (to convert screen relative positions to absolute Phaser coordinates)
+   * @param scrollY Current viewport vertical scroll offset
+   * @param gameCanvas Active Phaser game canvas element to exclude from scan
+   * @param gameContainer Parent wrapper element of the Phaser game to exclude
+   */
   public static scan(scrollX: number, scrollY: number, gameCanvas: HTMLCanvasElement | null = null, gameContainer: HTMLElement | null = null): IDomBody[] {
     const domBodies: IDomBody[] = [];
 
@@ -19,12 +38,20 @@ export class DomScanner {
     // 2. Second Pass: Traverse the DOM recursively to collect characters and matching elements
     this.collectEdibleElements(document.body, scrollX, scrollY, domBodies, gameCanvas, gameContainer);
 
-    // 3. Add game container walls
+    // 3. Add game container walls (acting as physical barriers until escape pill is eaten)
     this.addGameShellWalls(scrollX, scrollY, domBodies, gameContainer);
 
     return domBodies;
   }
 
+  /**
+   * Evaluates if a DOM element should be excluded from scanning and gameplay.
+   * Excludes the game canvas, game container, scripts/styles, and already eaten nodes.
+   * Also excludes full-screen fixed overlays (backdrops, modals) to prevent the snake 
+   * from being boxed in or blocked by non-interactive layout shells.
+   * 
+   * @param isTextScan Set to true when called during text parsing to prevent parsing already split spans
+   */
   private static isExcludedElement(el: HTMLElement, gameCanvas: HTMLCanvasElement | null, gameContainer: HTMLElement | null, isTextScan: boolean = false): boolean {
     if (el === gameCanvas || el === gameContainer) return true;
     if (gameContainer && gameContainer.contains(el)) return true;
@@ -36,12 +63,14 @@ export class DomScanner {
     }
 
     if (isTextScan) {
+      // Prevents infinite loops: do not scan text nodes that are already children of our injected character spans.
       if (el.classList.contains('edible-char') || el.closest('.edible-char')) {
         return true;
       }
     }
 
     // Dynamic full-screen fixed overlay check (like backdrops, modal overlays)
+    // Ensures that full-screen fixed layout shields on general websites don't act as giant physical blocks.
     const style = window.getComputedStyle(el);
     if (style.position === 'fixed') {
       const rect = el.getBoundingClientRect();
@@ -53,12 +82,16 @@ export class DomScanner {
     return false;
   }
 
+  /**
+   * Recursively walks the DOM tree to locate all valid text nodes containing renderable characters.
+   * Traverses into elements, element children, and Shadow DOM boundaries.
+   */
   private static findTextNodes(node: Node, result: Text[], gameCanvas: HTMLCanvasElement | null = null, gameContainer: HTMLElement | null = null) {
     if (node.nodeType === Node.TEXT_NODE) {
       if (node.nodeValue && node.nodeValue.trim()) {
         const parent = node.parentNode as HTMLElement;
+        // Verify parent element isn't marked for exclusion before registering its text.
         if (parent && !parent.closest('script, style, noscript, .edible-char, [data-eaten="true"]')) {
-          // Prevent scanning text nodes that are part of the game container itself
           if (gameContainer && gameContainer.contains(parent)) return;
           result.push(node as Text);
         }
@@ -67,6 +100,7 @@ export class DomScanner {
       const el = node as HTMLElement;
       if (this.isExcludedElement(el, gameCanvas, gameContainer, true)) return;
       
+      // Ignore hidden or zero-opacity layout nodes to prevent invisible block collisions.
       const style = window.getComputedStyle(el);
       if (style.display === 'none' || style.visibility === 'hidden' || parseFloat(style.opacity) === 0) return;
 
@@ -77,6 +111,10 @@ export class DomScanner {
     }
   }
 
+  /**
+   * Replaces a single text node with a document fragment containing individual spans 
+   * for each character. This allows the snake to eat text letter-by-letter.
+   */
   private static replaceTextNodeWithSpans(textNode: Text) {
     const text = textNode.nodeValue || '';
     const parent = textNode.parentNode;
@@ -87,6 +125,7 @@ export class DomScanner {
 
     for (let i = 0; i < text.length; i++) {
       const char = text[i];
+      // Keep whitespace as normal text nodes to preserve original HTML layout flow.
       if (char.trim() === '') {
         fragment.appendChild(document.createTextNode(char));
       } else {
@@ -108,17 +147,20 @@ export class DomScanner {
   /**
    * Style-based card detection heuristic to identify card/block layout components dynamically.
    * Checks if an element has non-trivial boundaries (shadows, borders, or distinct backgrounds).
+   * This is decoupled from class names to ensure compatibility with any website.
    */
   private static isCardElement(el: HTMLElement, style: CSSStyleDeclaration, rect: DOMRect): boolean {
     if (el === document.body || el === document.documentElement || el.id === 'root') return false;
     
-    // Exclude elements matching targetSelector (they have their own media/custom animations)
+    // Exclude elements matching targetSelector because they are interactive leaf nodes 
+    // and have their own distinct animation profiles.
     if (el.matches(this.targetSelector)) return false;
     
-    // Size check: must be at least a small block element (like an icon wrapper or badge)
+    // Size check: must be at least a small block element (like an icon wrapper, badge, or card).
+    // Allows micro-elements like status badges to be eaten as cards.
     if (rect.width < 12 || rect.height < 12) return false;
     
-    // Exclude large full-viewport layout sections/wrappers
+    // Exclude large full-viewport layout sections/wrappers to prevent trapping the snake inside grid shells.
     if (rect.width >= window.innerWidth * 0.9 || rect.height >= window.innerHeight * 0.9) return false;
 
     // 1. Box shadow (standard visual boundary for modern cards)
@@ -131,10 +173,14 @@ export class DomScanner {
     return hasShadow || hasBorder || hasBg;
   }
 
+  /**
+   * Traverses the DOM recursively to locate and collect characters, cards, and media elements.
+   * Converts viewport coordinates into absolute world coordinates and adds items to domBodies list.
+   */
   private static collectEdibleElements(node: Node, scrollX: number, scrollY: number, domBodies: IDomBody[], gameCanvas: HTMLCanvasElement | null = null, gameContainer: HTMLElement | null = null) {
     if (node.nodeType === Node.ELEMENT_NODE) {
       const el = node as HTMLElement;
-      if (this.isExcludedElement(el, gameCanvas, gameContainer)) return;
+      if (this.isExcludedElement(el, gameCanvas, gameContainer, false)) return;
 
       const style = window.getComputedStyle(el);
       if (style.display === 'none' || style.visibility === 'hidden' || parseFloat(style.opacity) === 0) return;
@@ -182,16 +228,20 @@ export class DomScanner {
     }
   }
 
+  /**
+   * Adds four physical wall segments around the bounding rectangle of a card element.
+   * This creates a physical obstacle that the snake must eat through.
+   */
   private static addCardWalls(card: HTMLElement, rect: DOMRect, scrollX: number, scrollY: number, domBodies: IDomBody[]) {
     const ax = rect.left + scrollX;
     const ay = rect.top + scrollY;
     const w = rect.width;
     const h = rect.height;
     
-    // Scale wall thickness dynamically with container size, capping between 4px and 15px
+    // Scale wall thickness dynamically with container size, capping between 4px and 15px.
+    // This prevents small badges/icon boxes from having overlapping massive walls.
     const thick = Math.max(4, Math.min(15, w / 4, h / 4));
     
-    // Add transition if not already set
     if (!card.style.transition) {
       card.style.transition = 'all 0.5s ease';
     }
@@ -214,6 +264,10 @@ export class DomScanner {
     });
   }
 
+  /**
+   * Adds four physical walls around the game shell/canvas container.
+   * These act as the boundary of the normal game phase.
+   */
   private static addGameShellWalls(scrollX: number, scrollY: number, domBodies: IDomBody[], gameContainer: HTMLElement | null = null) {
     const container = gameContainer || document.getElementById('game-container-shell');
     if (container) {
