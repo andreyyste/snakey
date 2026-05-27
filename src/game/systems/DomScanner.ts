@@ -25,15 +25,21 @@ export class DomScanner {
     return domBodies;
   }
 
-  private static isExcludedElement(el: HTMLElement, gameCanvas: HTMLCanvasElement | null, gameContainer: HTMLElement | null): boolean {
+  private static isExcludedElement(el: HTMLElement, gameCanvas: HTMLCanvasElement | null, gameContainer: HTMLElement | null, isTextScan: boolean = false): boolean {
     if (el === gameCanvas || el === gameContainer) return true;
     if (gameContainer && gameContainer.contains(el)) return true;
     if (el.dataset.eaten === 'true' || el.closest('[data-eaten="true"]')) return true;
     if (el.id === 'score-display') return true;
 
     const tagName = el.tagName.toLowerCase();
-    if (tagName === 'script' || tagName === 'style' || tagName === 'noscript' || el.classList.contains('edible-char') || el.closest('.edible-char')) {
+    if (tagName === 'script' || tagName === 'style' || tagName === 'noscript') {
       return true;
+    }
+
+    if (isTextScan) {
+      if (el.classList.contains('edible-char') || el.closest('.edible-char')) {
+        return true;
+      }
     }
 
     // Dynamic full-screen fixed overlay check (like backdrops, modal overlays)
@@ -60,7 +66,7 @@ export class DomScanner {
       }
     } else if (node.nodeType === Node.ELEMENT_NODE) {
       const el = node as HTMLElement;
-      if (this.isExcludedElement(el, gameCanvas, gameContainer)) return;
+      if (this.isExcludedElement(el, gameCanvas, gameContainer, true)) return;
       
       const style = window.getComputedStyle(el);
       if (style.display === 'none' || style.visibility === 'hidden' || parseFloat(style.opacity) === 0) return;
