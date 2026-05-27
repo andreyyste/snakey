@@ -62,10 +62,13 @@ export class Snake {
     let maxY = CANVAS_HEIGHT;
 
     if (isEscaped) {
-      minX = window.scrollX;
-      maxX = window.scrollX + window.innerWidth;
-      minY = window.scrollY;
-      maxY = window.scrollY + window.innerHeight;
+      // Use document boundaries instead of viewport scroll boundaries.
+      // This allows the player to scroll the page freely to follow the snake,
+      // and the snake will only die when hitting the actual edges of the website.
+      minX = 0;
+      maxX = Math.max(document.documentElement.scrollWidth, document.body.scrollWidth, window.innerWidth);
+      minY = 0;
+      maxY = Math.max(document.documentElement.scrollHeight, document.body.scrollHeight, window.innerHeight);
     }
 
     if (newX >= maxX || newX < minX || newY >= maxY || newY < minY) {
