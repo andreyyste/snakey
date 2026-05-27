@@ -116,7 +116,7 @@ export class DomScanner {
     if (el.matches(this.targetSelector)) return false;
     
     // Size check: must be at least a small block element (like an icon wrapper or badge)
-    if (rect.width < 24 || rect.height < 24) return false;
+    if (rect.width < 12 || rect.height < 12) return false;
     
     // Exclude large full-viewport layout sections/wrappers
     if (rect.width >= window.innerWidth * 0.9 || rect.height >= window.innerHeight * 0.9) return false;
