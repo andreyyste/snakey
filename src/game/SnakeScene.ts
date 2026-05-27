@@ -140,21 +140,53 @@ export class SnakeScene extends Phaser.Scene {
     // Clear any running CSS animation timers to prevent memory leaks and style overrides
     DomAnimator.clearAll();
 
-    // Restore DOM elements styles
-    const eatenElements = document.querySelectorAll('[data-eaten], [data-card-eaten], .card-eaten');
+    // Restore DOM elements styles and clean up dynamic backgrounds
+    const eatenElements = document.querySelectorAll('[data-eaten], [data-card-eaten], [data-has-dynamic-bg]');
     eatenElements.forEach((node) => {
       const el = node as HTMLElement;
       el.style.transform = '';
       el.style.opacity = '';
       el.style.visibility = '';
-      el.style.background = '';
-      el.style.borderColor = '';
-      el.style.boxShadow = '';
       el.style.transition = '';
-      el.classList.remove('card-eaten');
+      
+      // If it had a dynamic background set up, restore its original styles
+      if (el.dataset.hasDynamicBg === 'true') {
+        el.style.background = el.dataset.origBg || '';
+        el.style.backgroundColor = el.dataset.origBgColor || '';
+        el.style.backgroundImage = el.dataset.origBgImage || '';
+        el.style.boxShadow = el.dataset.origShadow || '';
+        el.style.position = el.dataset.origPosition || '';
+        el.style.borderTop = el.dataset.origBorderTop || '';
+        el.style.borderRight = el.dataset.origBorderRight || '';
+        el.style.borderBottom = el.dataset.origBorderBottom || '';
+        el.style.borderLeft = el.dataset.origBorderLeft || '';
+        el.style.borderRadius = el.dataset.origBorderRadius || '';
+
+        // Delete original style backup keys
+        delete el.dataset.hasDynamicBg;
+        delete el.dataset.origBg;
+        delete el.dataset.origBgColor;
+        delete el.dataset.origBgImage;
+        delete el.dataset.origShadow;
+        delete el.dataset.origPosition;
+        delete el.dataset.origBorderTop;
+        delete el.dataset.origBorderRight;
+        delete el.dataset.origBorderBottom;
+        delete el.dataset.origBorderLeft;
+        delete el.dataset.origBorderRadius;
+      } else {
+        el.style.background = '';
+        el.style.borderColor = '';
+        el.style.boxShadow = '';
+      }
+
       delete el.dataset.eaten;
       delete el.dataset.cardEaten;
     });
+
+    // Remove any dynamic card background elements from the DOM
+    const dynamicBgs = document.querySelectorAll('.dynamic-card-bg');
+    dynamicBgs.forEach((bg) => bg.remove());
   }
 
   private handleScroll = () => {

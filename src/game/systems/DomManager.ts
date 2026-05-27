@@ -72,7 +72,12 @@ export class DomManager {
     this.isScanning = true;
     try {
       const gameCanvas = this.scene.game?.canvas || null;
-      this.domBodies = DomScanner.scan(window.scrollX, window.scrollY, gameCanvas);
+      // Dynamically locate the game container to exclude it from DOM eating.
+      // Checks for custom React containers, falling back to the canvas's physical parent wrapper.
+      const gameContainer = document.getElementById('phaser-game-container') || 
+                            document.getElementById('game-container-shell') || 
+                            (gameCanvas ? gameCanvas.parentElement : null);
+      this.domBodies = DomScanner.scan(window.scrollX, window.scrollY, gameCanvas, gameContainer);
     } finally {
       this.isScanning = false;
     }

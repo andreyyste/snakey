@@ -2,14 +2,14 @@ import Phaser from 'phaser';
 import { IDomBody } from './DomManager';
 
 export class DomScanner {
-  private static targetSelector = 'img, svg, video, input, textarea, button, a, select, progress, meter, canvas, hr, iframe, audio, .bg-white.rounded-lg, .w-10.h-10';
+  private static targetSelector = 'img, svg, video, input, textarea, button, a, select, progress, meter, canvas, hr, iframe, audio';
 
-  public static scan(scrollX: number, scrollY: number, gameCanvas: HTMLCanvasElement | null = null): IDomBody[] {
+  public static scan(scrollX: number, scrollY: number, gameCanvas: HTMLCanvasElement | null = null, gameContainer: HTMLElement | null = null): IDomBody[] {
     const domBodies: IDomBody[] = [];
 
     // 1. First Pass: Find all text nodes recursively (including inside Shadow DOM)
     const textNodes: Text[] = [];
-    this.findTextNodes(document.body, textNodes, gameCanvas);
+    this.findTextNodes(document.body, textNodes, gameCanvas, gameContainer);
     
     // Replace text nodes with edible character spans
     textNodes.forEach(textNode => {
@@ -17,34 +17,57 @@ export class DomScanner {
     });
 
     // 2. Second Pass: Traverse the DOM recursively to collect characters and matching elements
-    this.collectEdibleElements(document.body, scrollX, scrollY, domBodies, gameCanvas);
+    this.collectEdibleElements(document.body, scrollX, scrollY, domBodies, gameCanvas, gameContainer);
 
     // 3. Add game container walls
-    this.addGameShellWalls(scrollX, scrollY, domBodies);
+    this.addGameShellWalls(scrollX, scrollY, domBodies, gameContainer);
 
     return domBodies;
   }
 
-  private static findTextNodes(node: Node, result: Text[], gameCanvas: HTMLCanvasElement | null = null) {
+  private static isExcludedElement(el: HTMLElement, gameCanvas: HTMLCanvasElement | null, gameContainer: HTMLElement | null): boolean {
+    if (el === gameCanvas || el === gameContainer) return true;
+    if (gameContainer && gameContainer.contains(el)) return true;
+    if (el.dataset.eaten === 'true' || el.closest('[data-eaten="true"]')) return true;
+    if (el.id === 'score-display') return true;
+
+    const tagName = el.tagName.toLowerCase();
+    if (tagName === 'script' || tagName === 'style' || tagName === 'noscript' || el.classList.contains('edible-char') || el.closest('.edible-char')) {
+      return true;
+    }
+
+    // Dynamic full-screen fixed overlay check (like backdrops, modal overlays)
+    const style = window.getComputedStyle(el);
+    if (style.position === 'fixed') {
+      const rect = el.getBoundingClientRect();
+      if (rect.width >= window.innerWidth * 0.9 && rect.height >= window.innerHeight * 0.9) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  private static findTextNodes(node: Node, result: Text[], gameCanvas: HTMLCanvasElement | null = null, gameContainer: HTMLElement | null = null) {
     if (node.nodeType === Node.TEXT_NODE) {
       if (node.nodeValue && node.nodeValue.trim()) {
         const parent = node.parentNode as HTMLElement;
-        if (parent && !parent.closest('script, style, noscript, .fixed.inset-0, #game-container-shell, .edible-char, [data-eaten="true"]')) {
+        if (parent && !parent.closest('script, style, noscript, .edible-char, [data-eaten="true"]')) {
+          // Prevent scanning text nodes that are part of the game container itself
+          if (gameContainer && gameContainer.contains(parent)) return;
           result.push(node as Text);
         }
       }
     } else if (node.nodeType === Node.ELEMENT_NODE) {
       const el = node as HTMLElement;
-      if (el === gameCanvas) return;
-      if (el.dataset.eaten === 'true') return;
-      if (el.closest('script, style, noscript, .fixed.inset-0, #game-container-shell, .edible-char')) return;
+      if (this.isExcludedElement(el, gameCanvas, gameContainer)) return;
       
       const style = window.getComputedStyle(el);
       if (style.display === 'none' || style.visibility === 'hidden' || parseFloat(style.opacity) === 0) return;
 
-      el.childNodes.forEach(child => this.findTextNodes(child, result, gameCanvas));
+      el.childNodes.forEach(child => this.findTextNodes(child, result, gameCanvas, gameContainer));
       if (el.shadowRoot) {
-        el.shadowRoot.childNodes.forEach(child => this.findTextNodes(child, result, gameCanvas));
+        el.shadowRoot.childNodes.forEach(child => this.findTextNodes(child, result, gameCanvas, gameContainer));
       }
     }
   }
@@ -77,12 +100,34 @@ export class DomScanner {
     }
   }
 
-  private static collectEdibleElements(node: Node, scrollX: number, scrollY: number, domBodies: IDomBody[], gameCanvas: HTMLCanvasElement | null = null) {
+  /**
+   * Style-based card detection heuristic to identify card/block layout components dynamically.
+   * Checks if an element has non-trivial boundaries (shadows, borders, or distinct backgrounds).
+   */
+  private static isCardElement(el: HTMLElement, style: CSSStyleDeclaration, rect: DOMRect): boolean {
+    if (el === document.body || el === document.documentElement || el.id === 'root') return false;
+    if (rect.width < 120 || rect.height < 80) return false;
+    
+    // Exclude large full-viewport layout sections/wrappers
+    if (rect.width >= window.innerWidth * 0.9 || rect.height >= window.innerHeight * 0.9) return false;
+
+    // Check if the element contains children (it must be a layout container, not a leaf tag)
+    if (el.childElementCount === 0) return false;
+
+    // 1. Box shadow (standard visual boundary for modern cards)
+    const hasShadow = style.boxShadow !== 'none' && style.boxShadow !== '';
+    // 2. Visible border
+    const hasBorder = style.borderStyle !== 'none' && style.borderWidth !== '0px' && style.borderColor !== 'transparent';
+    // 3. Different background color from transparent
+    const hasBg = style.backgroundColor !== 'transparent' && style.backgroundColor !== 'rgba(0, 0, 0, 0)';
+
+    return hasShadow || hasBorder || hasBg;
+  }
+
+  private static collectEdibleElements(node: Node, scrollX: number, scrollY: number, domBodies: IDomBody[], gameCanvas: HTMLCanvasElement | null = null, gameContainer: HTMLElement | null = null) {
     if (node.nodeType === Node.ELEMENT_NODE) {
       const el = node as HTMLElement;
-      if (el === gameCanvas) return;
-      if (el.dataset.eaten === 'true') return;
-      if (el.closest('.fixed.inset-0, #game-container-shell')) return;
+      if (this.isExcludedElement(el, gameCanvas, gameContainer)) return;
 
       const style = window.getComputedStyle(el);
       if (style.display === 'none' || style.visibility === 'hidden' || parseFloat(style.opacity) === 0) return;
@@ -99,8 +144,8 @@ export class DomScanner {
             type: 'char'
           });
         }
-        // Check if it is a card container (exclude from media query matching to avoid double target)
-        else if (el.classList.contains('card-container')) {
+        // Check if it is a card container (exclude from targetSelector matching to prevent duplicate collisions)
+        else if (this.isCardElement(el, style, rect)) {
           if (el.dataset.cardEaten !== 'true') {
             this.addCardWalls(el, rect, scrollX, scrollY, domBodies);
           }
@@ -122,10 +167,10 @@ export class DomScanner {
       }
 
       // Recurse into children
-      el.childNodes.forEach(child => this.collectEdibleElements(child, scrollX, scrollY, domBodies, gameCanvas));
+      el.childNodes.forEach(child => this.collectEdibleElements(child, scrollX, scrollY, domBodies, gameCanvas, gameContainer));
       // Recurse into shadow DOM
       if (el.shadowRoot) {
-        el.shadowRoot.childNodes.forEach(child => this.collectEdibleElements(child, scrollX, scrollY, domBodies, gameCanvas));
+        el.shadowRoot.childNodes.forEach(child => this.collectEdibleElements(child, scrollX, scrollY, domBodies, gameCanvas, gameContainer));
       }
     }
   }
@@ -160,8 +205,8 @@ export class DomScanner {
     });
   }
 
-  private static addGameShellWalls(scrollX: number, scrollY: number, domBodies: IDomBody[]) {
-    const container = document.getElementById('game-container-shell');
+  private static addGameShellWalls(scrollX: number, scrollY: number, domBodies: IDomBody[], gameContainer: HTMLElement | null = null) {
+    const container = gameContainer || document.getElementById('game-container-shell');
     if (container) {
       const rect = container.getBoundingClientRect();
       const ax = rect.left + scrollX;

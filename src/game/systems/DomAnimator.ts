@@ -50,7 +50,17 @@ export class DomAnimator {
         .filter(b => b.type === 'wall' && b.element === el)
         .forEach(b => (b.hasBeenEaten = true));
     } else if (item.type === 'cardWall') {
-      el.classList.add('card-eaten');
+      // Set up dynamic cloned card background if not already done
+      DomAnimator.setupDynamicCardBackground(el);
+      
+      const bgDiv = el.querySelector('.dynamic-card-bg') as HTMLElement;
+      if (bgDiv) {
+        // Force reflow and animate
+        bgDiv.getBoundingClientRect();
+        bgDiv.style.transform = 'scale(0) rotate(15deg)';
+        bgDiv.style.opacity = '0';
+      }
+      
       // Mark all wall segments of this card as eaten
       domBodies
         .filter(b => b.type === 'cardWall' && b.element === el)
@@ -196,5 +206,76 @@ export class DomAnimator {
         DomAnimator.activeTimeouts.add(timeoutId);
       }
     }
+  }
+
+  private static setupDynamicCardBackground(el: HTMLElement) {
+    if (el.dataset.hasDynamicBg === 'true') return;
+
+    const style = window.getComputedStyle(el);
+    
+    // Save original styles for restoration
+    el.dataset.origBg = el.style.background;
+    el.dataset.origBgColor = el.style.backgroundColor;
+    el.dataset.origBgImage = el.style.backgroundImage;
+    el.dataset.origShadow = el.style.boxShadow;
+    el.dataset.origPosition = el.style.position;
+    
+    // Border original styles
+    el.dataset.origBorderTop = el.style.borderTop;
+    el.dataset.origBorderRight = el.style.borderRight;
+    el.dataset.origBorderBottom = el.style.borderBottom;
+    el.dataset.origBorderLeft = el.style.borderLeft;
+    el.dataset.origBorderRadius = el.style.borderRadius;
+
+    // Create the background wrapper
+    const bgDiv = document.createElement('div');
+    bgDiv.className = 'dynamic-card-bg';
+    
+    // Layout and sizing
+    bgDiv.style.position = 'absolute';
+    bgDiv.style.top = '0';
+    bgDiv.style.left = '0';
+    bgDiv.style.width = '100%';
+    bgDiv.style.height = '100%';
+    bgDiv.style.zIndex = '-1';
+    bgDiv.style.boxSizing = 'border-box';
+    bgDiv.style.pointerEvents = 'none';
+
+    // Clone visual styles
+    bgDiv.style.background = style.background || style.backgroundColor;
+    bgDiv.style.backgroundImage = style.backgroundImage;
+    bgDiv.style.boxShadow = style.boxShadow;
+    
+    // Clone border styles
+    bgDiv.style.borderTop = style.borderTop;
+    bgDiv.style.borderRight = style.borderRight;
+    bgDiv.style.borderBottom = style.borderBottom;
+    bgDiv.style.borderLeft = style.borderLeft;
+    
+    // Clone border radius
+    bgDiv.style.borderTopLeftRadius = style.borderTopLeftRadius;
+    bgDiv.style.borderTopRightRadius = style.borderTopRightRadius;
+    bgDiv.style.borderBottomLeftRadius = style.borderBottomLeftRadius;
+    bgDiv.style.borderBottomRightRadius = style.borderBottomRightRadius;
+
+    // Ensure relative positioning on parent card to anchor absolute background
+    if (style.position === 'static') {
+      el.style.position = 'relative';
+    }
+
+    // Insert as the first child so it sits behind text/content
+    el.insertBefore(bgDiv, el.firstChild);
+
+    // Make parent card styles transparent
+    el.style.background = 'transparent';
+    el.style.backgroundColor = 'transparent';
+    el.style.backgroundImage = 'none';
+    el.style.boxShadow = 'none';
+    el.style.borderTop = 'none';
+    el.style.borderRight = 'none';
+    el.style.borderBottom = 'none';
+    el.style.borderLeft = 'none';
+
+    el.dataset.hasDynamicBg = 'true';
   }
 }
