@@ -12,7 +12,7 @@ What starts as a simple, confined 800x600 arcade game quickly turns into an inte
 
 - **Classic Gameplay**: A polished retro snake experience with smooth grid-based movement and responsive controls.
 - **Escape Mode**: Upon reaching a score of 100, the mysterious **Red Pill** appears. Eating it shatters the boundaries of the canvas, allowing the snake to roam freely across the entire webpage.
-- **DOM Eating Sandbox**: The snake gains the ability to physically eat HTML elements (text characters, dropdowns, inputs, progress bars, audio widgets, and cards).
+- **Universal DOM Eating Sandbox**: Fully decoupled from local stylesheets and static class configurations. The snake can crawl on **any website** (e.g., Wikipedia, Google, blogs) and physically consume HTML elements (text, dropdowns, inputs, progress indicators, media, and cards) with dynamic visual card background extraction.
 - **Dynamic Content Support**: Relies on a reactive observer that immediately adapts when new elements are injected or loaded dynamically (e.g. lazy-loaded content, scrolls).
 - **Cinematic Viewport Finale**: Once you're done eating elements, crash the snake into any edge of the browser viewport to trigger a dramatic end-game sequence where the website collapses, folds, and falls off the screen, leaving a pitch-black void before resetting.
 
@@ -47,6 +47,7 @@ The `DomScanner` acts as the parser. It crawls the webpage DOM and generates tar
 - **Computed Visibility Filtering**: Checks computed style values (`window.getComputedStyle`) to ignore elements hidden via `display: none`, `visibility: hidden`, or `opacity: 0`.
 - **Phaser Canvas Excluder**: Automatically identifies the Phaser game canvas and prevents the snake from eating the container rendering the game.
 - **Multi-Element Mapping**: Targets a wide array of tags: `img`, `svg`, `video`, `input`, `textarea`, `button`, `a`, `select`, `progress`, `meter`, `canvas`, `hr`, `iframe`, and `audio`.
+- **Universal Card Detection**: Dynamically identifies card-like block layouts on any webpage using style-based heuristics (backgrounds, borders, shadows, and dimensions) rather than static class name checks.
 
 ### ⚙️ 2. `DomManager` (The Orchestrator)
 The `DomManager` acts as the main bridge keeping state and listening to browser viewport changes.
@@ -63,7 +64,7 @@ The `DomAnimator` triggers specific transitions on HTML elements when eaten by t
 - **`input[type=checkbox]` / `input[type=radio]`**: Triggers a rapid click toggle (6 times at 50ms interval) to simulate click madness before disappearing.
 - **`input` / `textarea`**: Shakes horizontally (vibration effect) for 400ms before spinning and shrinking.
 - **`audio` / `video`**: Instantly speeds up playback rate to 3.0x and fades out audio volume to 0 (if playing) before pausing and shrinking.
-- **`.card-container`**: Uses a `::before` pseudo-element for background styling (white background, shadows, borders) so that when eaten, only the card background rotates and shrinks, leaving the text inside completely visible and edible in place.
+- **Universal Card Chomping**: Lazily clones any card's computed styles (shadow, border, background, border-radius) onto an absolutely positioned dynamic background wrapper `div` (`.dynamic-card-bg`), hides the original card background, and scales the wrapper to 0. This allows card backgrounds to crumble on **any website** while keeping inner text intact and edible.
 - **Descendant Cleanup**: Automatically marks all children of eaten elements as eaten to avoid leaving "ghost" collider blocks.
 
 ---
