@@ -141,15 +141,26 @@ export class DomScanner {
       if (this.isExcluded(el, gameCanvas, gameShell, false)) return;
 
       const style = window.getComputedStyle(el);
-      if (style.display === 'none' || style.visibility === 'hidden' || parseFloat(style.opacity) === 0) return;
+      const isInputCheckOrRadio = el.tagName.toLowerCase() === 'input' && 
+                                  ((el as HTMLInputElement).type === 'checkbox' || (el as HTMLInputElement).type === 'radio');
+
+      if (style.display === 'none' || style.visibility === 'hidden') return;
+      if (parseFloat(style.opacity) === 0 && !isInputCheckOrRadio) return;
 
       const rect = el.getBoundingClientRect();
       if (rect.width > 0 && rect.height > 0) {
         // Check if it is a split character
         if (el.classList.contains('edible-char')) {
+          // Add a generous 4px padding on all sides for characters to make text eating smooth
+          const padding = 4;
+          const bodyX = rect.left + scrollX - padding;
+          const bodyY = rect.top + scrollY - padding;
+          const bodyW = rect.width + padding * 2;
+          const bodyH = rect.height + padding * 2;
+          
           domBodies.push({
             element: el,
-            body: new Phaser.Geom.Rectangle(rect.left + scrollX, rect.top + scrollY, rect.width, rect.height),
+            body: new Phaser.Geom.Rectangle(bodyX, bodyY, bodyW, bodyH),
             id: `char-${domBodies.length}`,
             hasBeenEaten: false,
             type: 'char'
@@ -167,9 +178,18 @@ export class DomScanner {
           if (!el.style.transition) {
             el.style.transition = 'all 0.3s ease';
           }
+          
+          // Inflate collision box by 10px on all sides for small media/interactive elements (like radio/checkboxes)
+          // to ensure reliable collision with the 20px snake head.
+          const padding = 10;
+          const bodyX = rect.left + scrollX - padding;
+          const bodyY = rect.top + scrollY - padding;
+          const bodyW = rect.width + padding * 2;
+          const bodyH = rect.height + padding * 2;
+
           domBodies.push({
             element: el,
-            body: new Phaser.Geom.Rectangle(rect.left + scrollX, rect.top + scrollY, rect.width, rect.height),
+            body: new Phaser.Geom.Rectangle(bodyX, bodyY, bodyW, bodyH),
             id: `media-${domBodies.length}`,
             hasBeenEaten: false,
             type: 'media'
