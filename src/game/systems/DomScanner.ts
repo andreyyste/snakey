@@ -9,7 +9,9 @@ export class DomScanner {
     const domBodies: IDomBody[] = [];
 
     // Dynamically identify the game container shell to exclude it from being eaten
-    const gameShell = gameCanvas ? (gameCanvas.closest('#game-container-shell') || gameCanvas.parentElement) : null;
+    const gameShell = gameCanvas 
+      ? (document.getElementById('game-container-shell') || gameCanvas.closest('#game-container-shell') || gameCanvas.parentElement) 
+      : null;
 
     // 1. First Pass: Find all text nodes recursively (including inside Shadow DOM)
     const textNodes: Text[] = [];
@@ -33,13 +35,24 @@ export class DomScanner {
    * Evaluates whether an element should be ignored by the scanner.
    * Excludes the game's own interface, scripts, styles, overlays, and already eaten nodes.
    */
-  private static isExcluded(el: HTMLElement, gameCanvas: HTMLCanvasElement | null, gameShell: HTMLElement | null): boolean {
+  private static isExcluded(el: HTMLElement, gameCanvas: HTMLCanvasElement | null, gameShell: HTMLElement | null, ignoreEdibleChar = false): boolean {
     if (el === gameCanvas) return true;
     if (el.dataset.eaten === 'true') return true;
-    if (gameShell && gameShell.contains(el)) return true;
     
-    // Ignore hidden utilities, code, styling, and already split chars
-    if (el.closest('script, style, noscript, .fixed.inset-0, .edible-char')) return true;
+    // Do not exclude elements if the game shell is body or html
+    if (gameShell && gameShell !== document.body && gameShell !== document.documentElement) {
+      if (gameShell.contains(el)) return true;
+    }
+
+    // Exclude the score display specifically since it is outside the shell in the local game
+    if (el.closest('#score-display')) return true;
+    
+    // Ignore hidden utilities, code, and styling
+    if (el.closest('script, style, noscript, .fixed.inset-0')) return true;
+
+    // Only ignore already split character spans during the text-finding pass
+    if (ignoreEdibleChar && el.closest('.edible-char')) return true;
+
     return false;
   }
 
@@ -69,13 +82,13 @@ export class DomScanner {
     if (node.nodeType === Node.TEXT_NODE) {
       if (node.nodeValue && node.nodeValue.trim()) {
         const parent = node.parentNode as HTMLElement;
-        if (parent && !this.isExcluded(parent, gameCanvas, gameShell)) {
+        if (parent && !this.isExcluded(parent, gameCanvas, gameShell, true)) {
           result.push(node as Text);
         }
       }
     } else if (node.nodeType === Node.ELEMENT_NODE) {
       const el = node as HTMLElement;
-      if (this.isExcluded(el, gameCanvas, gameShell)) return;
+      if (this.isExcluded(el, gameCanvas, gameShell, true)) return;
       
       const style = window.getComputedStyle(el);
       if (style.display === 'none' || style.visibility === 'hidden' || parseFloat(style.opacity) === 0) return;
@@ -125,7 +138,7 @@ export class DomScanner {
   ) {
     if (node.nodeType === Node.ELEMENT_NODE) {
       const el = node as HTMLElement;
-      if (this.isExcluded(el, gameCanvas, gameShell)) return;
+      if (this.isExcluded(el, gameCanvas, gameShell, false)) return;
 
       const style = window.getComputedStyle(el);
       if (style.display === 'none' || style.visibility === 'hidden' || parseFloat(style.opacity) === 0) return;
@@ -205,7 +218,7 @@ export class DomScanner {
 
   private static addGameShellWalls(scrollX: number, scrollY: number, domBodies: IDomBody[], gameShell: HTMLElement | null = null) {
     const container = gameShell || document.getElementById('game-container-shell');
-    if (container) {
+    if (container && container !== document.body && container !== document.documentElement) {
       const rect = container.getBoundingClientRect();
       const ax = rect.left + scrollX;
       const ay = rect.top + scrollY;
