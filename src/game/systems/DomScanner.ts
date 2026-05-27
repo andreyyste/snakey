@@ -2,20 +2,14 @@ import Phaser from 'phaser';
 import { IDomBody } from './DomManager';
 
 export class DomScanner {
-  // A generic list of standard HTML tags that are interactive, media-rich, or structural
-  private static targetSelector = 'img, svg, video, input, textarea, button, a, select, progress, meter, canvas, hr, iframe, audio';
+  private static targetSelector = 'img, svg, video, input, textarea, button, a, select, progress, meter, canvas, hr, iframe, audio, .bg-white.rounded-lg, .w-10.h-10';
 
   public static scan(scrollX: number, scrollY: number, gameCanvas: HTMLCanvasElement | null = null): IDomBody[] {
     const domBodies: IDomBody[] = [];
 
-    // Dynamically identify the game container shell to exclude it from being eaten
-    const gameShell = gameCanvas 
-      ? (document.getElementById('game-container-shell') || gameCanvas.closest('#game-container-shell') || gameCanvas.parentElement) 
-      : null;
-
     // 1. First Pass: Find all text nodes recursively (including inside Shadow DOM)
     const textNodes: Text[] = [];
-    this.findTextNodes(document.body, textNodes, gameCanvas, gameShell);
+    this.findTextNodes(document.body, textNodes, gameCanvas);
     
     // Replace text nodes with edible character spans
     textNodes.forEach(textNode => {
@@ -23,79 +17,34 @@ export class DomScanner {
     });
 
     // 2. Second Pass: Traverse the DOM recursively to collect characters and matching elements
-    this.collectEdibleElements(document.body, scrollX, scrollY, domBodies, gameCanvas, gameShell);
+    this.collectEdibleElements(document.body, scrollX, scrollY, domBodies, gameCanvas);
 
     // 3. Add game container walls
-    this.addGameShellWalls(scrollX, scrollY, domBodies, gameShell);
+    this.addGameShellWalls(scrollX, scrollY, domBodies);
 
     return domBodies;
   }
 
-  /**
-   * Evaluates whether an element should be ignored by the scanner.
-   * Excludes the game's own interface, scripts, styles, overlays, and already eaten nodes.
-   */
-  private static isExcluded(el: HTMLElement, gameCanvas: HTMLCanvasElement | null, gameShell: HTMLElement | null, ignoreEdibleChar = false): boolean {
-    if (el === gameCanvas) return true;
-    if (el.dataset.eaten === 'true') return true;
-    
-    // Do not exclude elements if the game shell is body or html
-    if (gameShell && gameShell !== document.body && gameShell !== document.documentElement) {
-      if (gameShell.contains(el)) return true;
-    }
-
-    // Exclude the score display specifically since it is outside the shell in the local game
-    if (el.closest('#score-display')) return true;
-    
-    // Ignore hidden utilities, code, and styling
-    if (el.closest('script, style, noscript, .fixed.inset-0')) return true;
-
-    // Only ignore already split character spans during the text-finding pass
-    if (ignoreEdibleChar && el.closest('.edible-char')) return true;
-
-    return false;
-  }
-
-  /**
-   * Helper to detect if an element acts as a card layout.
-   * Matches local card-containers and standard card classes, or dynamically detects block boxes 
-   * on other websites that have shadow borders and a background.
-   */
-  private static isCardElement(el: HTMLElement, style: CSSStyleDeclaration): boolean {
-    if (el.classList.contains('card-container') || el.classList.contains('card')) return true;
-    
-    const tagName = el.tagName.toLowerCase();
-    if (tagName !== 'div' && tagName !== 'section' && tagName !== 'article') return false;
-    
-    const hasShadow = style.boxShadow && style.boxShadow !== 'none';
-    const hasBorder = (style.borderStyle && style.borderStyle !== 'none' && parseFloat(style.borderWidth) > 0) ||
-                      (style.borderWidth && parseFloat(style.borderWidth) > 0 && style.borderColor && style.borderColor !== 'transparent');
-    const hasBg = style.backgroundColor && style.backgroundColor !== 'transparent' && style.backgroundColor !== 'rgba(0, 0, 0, 0)';
-    
-    // Card elements usually have a reasonable structural size
-    const isLarge = el.offsetWidth > 150 && el.offsetHeight > 100;
-    
-    return isLarge && (hasShadow || (hasBorder && hasBg));
-  }
-
-  private static findTextNodes(node: Node, result: Text[], gameCanvas: HTMLCanvasElement | null = null, gameShell: HTMLElement | null = null) {
+  private static findTextNodes(node: Node, result: Text[], gameCanvas: HTMLCanvasElement | null = null) {
     if (node.nodeType === Node.TEXT_NODE) {
       if (node.nodeValue && node.nodeValue.trim()) {
         const parent = node.parentNode as HTMLElement;
-        if (parent && !this.isExcluded(parent, gameCanvas, gameShell, true)) {
+        if (parent && !parent.closest('script, style, noscript, .fixed.inset-0, #game-container-shell, .edible-char, [data-eaten="true"]')) {
           result.push(node as Text);
         }
       }
     } else if (node.nodeType === Node.ELEMENT_NODE) {
       const el = node as HTMLElement;
-      if (this.isExcluded(el, gameCanvas, gameShell, true)) return;
+      if (el === gameCanvas) return;
+      if (el.dataset.eaten === 'true') return;
+      if (el.closest('script, style, noscript, .fixed.inset-0, #game-container-shell, .edible-char')) return;
       
       const style = window.getComputedStyle(el);
       if (style.display === 'none' || style.visibility === 'hidden' || parseFloat(style.opacity) === 0) return;
 
-      el.childNodes.forEach(child => this.findTextNodes(child, result, gameCanvas, gameShell));
+      el.childNodes.forEach(child => this.findTextNodes(child, result, gameCanvas));
       if (el.shadowRoot) {
-        el.shadowRoot.childNodes.forEach(child => this.findTextNodes(child, result, gameCanvas, gameShell));
+        el.shadowRoot.childNodes.forEach(child => this.findTextNodes(child, result, gameCanvas));
       }
     }
   }
@@ -128,51 +77,30 @@ export class DomScanner {
     }
   }
 
-  private static collectEdibleElements(
-    node: Node, 
-    scrollX: number, 
-    scrollY: number, 
-    domBodies: IDomBody[], 
-    gameCanvas: HTMLCanvasElement | null = null, 
-    gameShell: HTMLElement | null = null
-  ) {
+  private static collectEdibleElements(node: Node, scrollX: number, scrollY: number, domBodies: IDomBody[], gameCanvas: HTMLCanvasElement | null = null) {
     if (node.nodeType === Node.ELEMENT_NODE) {
       const el = node as HTMLElement;
-      if (this.isExcluded(el, gameCanvas, gameShell, false)) return;
+      if (el === gameCanvas) return;
+      if (el.dataset.eaten === 'true') return;
+      if (el.closest('.fixed.inset-0, #game-container-shell')) return;
 
       const style = window.getComputedStyle(el);
-      const isInputCheckOrRadio = el.tagName.toLowerCase() === 'input' && 
-                                  ((el as HTMLInputElement).type === 'checkbox' || (el as HTMLInputElement).type === 'radio');
-
-      if (style.display === 'none' || style.visibility === 'hidden') return;
-      if (parseFloat(style.opacity) === 0 && !isInputCheckOrRadio) return;
+      if (style.display === 'none' || style.visibility === 'hidden' || parseFloat(style.opacity) === 0) return;
 
       const rect = el.getBoundingClientRect();
-      // For radio/checkbox, use offset dimensions as fallback when bounding rect reports 0
-      // (some CSS frameworks set appearance:none making getBoundingClientRect return 0)
-      const elWidth = rect.width || (isInputCheckOrRadio ? el.offsetWidth : 0);
-      const elHeight = rect.height || (isInputCheckOrRadio ? el.offsetHeight : 0);
-
-      if (elWidth > 0 && elHeight > 0) {
+      if (rect.width > 0 && rect.height > 0) {
         // Check if it is a split character
         if (el.classList.contains('edible-char')) {
-          // Add a generous 4px padding on all sides for characters to make text eating smooth
-          const padding = 4;
-          const bodyX = rect.left + scrollX - padding;
-          const bodyY = rect.top + scrollY - padding;
-          const bodyW = elWidth + padding * 2;
-          const bodyH = elHeight + padding * 2;
-          
           domBodies.push({
             element: el,
-            body: new Phaser.Geom.Rectangle(bodyX, bodyY, bodyW, bodyH),
+            body: new Phaser.Geom.Rectangle(rect.left + scrollX, rect.top + scrollY, rect.width, rect.height),
             id: `char-${domBodies.length}`,
             hasBeenEaten: false,
             type: 'char'
           });
         }
-        // Check if it is a card container
-        else if (this.isCardElement(el, style)) {
+        // Check if it is a card container (exclude from media query matching to avoid double target)
+        else if (el.classList.contains('card-container')) {
           if (el.dataset.cardEaten !== 'true') {
             this.addCardWalls(el, rect, scrollX, scrollY, domBodies);
           }
@@ -183,20 +111,9 @@ export class DomScanner {
           if (!el.style.transition) {
             el.style.transition = 'all 0.3s ease';
           }
-          
-          // Enforce a minimum 40x40 collision area for tiny elements (radio/checkbox are ~16x16)
-          // so the 20px snake head can reliably collide with them.
-          const MIN_HIT = 40;
-          const hitW = Math.max(elWidth, MIN_HIT);
-          const hitH = Math.max(elHeight, MIN_HIT);
-
-          // Center the inflated hit box on the element
-          const bodyX = rect.left + scrollX - (hitW - elWidth) / 2;
-          const bodyY = rect.top + scrollY - (hitH - elHeight) / 2;
-
           domBodies.push({
             element: el,
-            body: new Phaser.Geom.Rectangle(bodyX, bodyY, hitW, hitH),
+            body: new Phaser.Geom.Rectangle(rect.left + scrollX, rect.top + scrollY, rect.width, rect.height),
             id: `media-${domBodies.length}`,
             hasBeenEaten: false,
             type: 'media'
@@ -205,10 +122,10 @@ export class DomScanner {
       }
 
       // Recurse into children
-      el.childNodes.forEach(child => this.collectEdibleElements(child, scrollX, scrollY, domBodies, gameCanvas, gameShell));
+      el.childNodes.forEach(child => this.collectEdibleElements(child, scrollX, scrollY, domBodies, gameCanvas));
       // Recurse into shadow DOM
       if (el.shadowRoot) {
-        el.shadowRoot.childNodes.forEach(child => this.collectEdibleElements(child, scrollX, scrollY, domBodies, gameCanvas, gameShell));
+        el.shadowRoot.childNodes.forEach(child => this.collectEdibleElements(child, scrollX, scrollY, domBodies, gameCanvas));
       }
     }
   }
@@ -243,9 +160,9 @@ export class DomScanner {
     });
   }
 
-  private static addGameShellWalls(scrollX: number, scrollY: number, domBodies: IDomBody[], gameShell: HTMLElement | null = null) {
-    const container = gameShell || document.getElementById('game-container-shell');
-    if (container && container !== document.body && container !== document.documentElement) {
+  private static addGameShellWalls(scrollX: number, scrollY: number, domBodies: IDomBody[]) {
+    const container = document.getElementById('game-container-shell');
+    if (container) {
       const rect = container.getBoundingClientRect();
       const ax = rect.left + scrollX;
       const ay = rect.top + scrollY;
