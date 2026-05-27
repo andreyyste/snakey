@@ -21,7 +21,6 @@ export class SnakeScene extends Phaser.Scene {
   private isGameOver: boolean = false;
   private isEscaped: boolean = false;
   private finalPhaseStarted: boolean = false;
-  private escapeScoreText: Phaser.GameObjects.Text | null = null;
 
   constructor() {
     super('SnakeScene');
@@ -188,11 +187,6 @@ export class SnakeScene extends Phaser.Scene {
     // Remove any dynamic card background elements from the DOM
     const dynamicBgs = document.querySelectorAll('.dynamic-card-bg');
     dynamicBgs.forEach((bg) => bg.remove());
-
-    if (this.escapeScoreText) {
-      this.escapeScoreText.destroy();
-      this.escapeScoreText = null;
-    }
   }
 
   private handleScroll = () => {
@@ -277,8 +271,10 @@ export class SnakeScene extends Phaser.Scene {
         this.domManager.eatElement(domHit);
       });
 
-      if (this.escapeScoreText) {
-        this.escapeScoreText.setText(`Score: ${this.score}`);
+      // Directly update the original HTML score counter text
+      const scoreSpan = document.querySelector('#score-display span') as HTMLElement;
+      if (scoreSpan) {
+        scoreSpan.textContent = this.score.toString();
       }
 
       const previousTens = Math.floor(oldScore / 10);
@@ -327,18 +323,6 @@ export class SnakeScene extends Phaser.Scene {
     canvas.style.pointerEvents = 'none';
 
     this.scale.resize(window.innerWidth, window.innerHeight);
-
-    // Create a floating score text on the Phaser canvas during escape phase
-    this.escapeScoreText = this.add.text(window.innerWidth - 30, 30, `Score: ${this.score}`, {
-      fontSize: '24px',
-      color: '#0f172a',
-      fontFamily: 'system-ui, -apple-system, sans-serif',
-      fontStyle: '800',
-      backgroundColor: '#ffffff',
-      padding: { x: 16, y: 8 }
-    }).setOrigin(1, 0).setScrollFactor(0).setDepth(1000);
-    this.escapeScoreText.setShadow(1, 1, 'rgba(0,0,0,0.1)', 2);
-
     this.domManager.init();
   }
 
