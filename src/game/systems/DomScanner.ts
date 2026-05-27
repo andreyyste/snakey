@@ -148,15 +148,20 @@ export class DomScanner {
       if (parseFloat(style.opacity) === 0 && !isInputCheckOrRadio) return;
 
       const rect = el.getBoundingClientRect();
-      if (rect.width > 0 && rect.height > 0) {
+      // For radio/checkbox, use offset dimensions as fallback when bounding rect reports 0
+      // (some CSS frameworks set appearance:none making getBoundingClientRect return 0)
+      const elWidth = rect.width || (isInputCheckOrRadio ? el.offsetWidth : 0);
+      const elHeight = rect.height || (isInputCheckOrRadio ? el.offsetHeight : 0);
+
+      if (elWidth > 0 && elHeight > 0) {
         // Check if it is a split character
         if (el.classList.contains('edible-char')) {
           // Add a generous 4px padding on all sides for characters to make text eating smooth
           const padding = 4;
           const bodyX = rect.left + scrollX - padding;
           const bodyY = rect.top + scrollY - padding;
-          const bodyW = rect.width + padding * 2;
-          const bodyH = rect.height + padding * 2;
+          const bodyW = elWidth + padding * 2;
+          const bodyH = elHeight + padding * 2;
           
           domBodies.push({
             element: el,
@@ -179,17 +184,19 @@ export class DomScanner {
             el.style.transition = 'all 0.3s ease';
           }
           
-          // Inflate collision box by 10px on all sides for small media/interactive elements (like radio/checkboxes)
-          // to ensure reliable collision with the 20px snake head.
-          const padding = 10;
-          const bodyX = rect.left + scrollX - padding;
-          const bodyY = rect.top + scrollY - padding;
-          const bodyW = rect.width + padding * 2;
-          const bodyH = rect.height + padding * 2;
+          // Enforce a minimum 40x40 collision area for tiny elements (radio/checkbox are ~16x16)
+          // so the 20px snake head can reliably collide with them.
+          const MIN_HIT = 40;
+          const hitW = Math.max(elWidth, MIN_HIT);
+          const hitH = Math.max(elHeight, MIN_HIT);
+
+          // Center the inflated hit box on the element
+          const bodyX = rect.left + scrollX - (hitW - elWidth) / 2;
+          const bodyY = rect.top + scrollY - (hitH - elHeight) / 2;
 
           domBodies.push({
             element: el,
-            body: new Phaser.Geom.Rectangle(bodyX, bodyY, bodyW, bodyH),
+            body: new Phaser.Geom.Rectangle(bodyX, bodyY, hitW, hitH),
             id: `media-${domBodies.length}`,
             hasBeenEaten: false,
             type: 'media'
