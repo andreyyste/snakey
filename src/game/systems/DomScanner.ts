@@ -29,7 +29,6 @@ export class DomScanner {
     if (el === gameCanvas || el === gameContainer) return true;
     if (gameContainer && gameContainer.contains(el)) return true;
     if (el.dataset.eaten === 'true' || el.closest('[data-eaten="true"]')) return true;
-    if (el.id === 'score-display') return true;
 
     const tagName = el.tagName.toLowerCase();
     if (tagName === 'script' || tagName === 'style' || tagName === 'noscript') {
@@ -112,13 +111,15 @@ export class DomScanner {
    */
   private static isCardElement(el: HTMLElement, style: CSSStyleDeclaration, rect: DOMRect): boolean {
     if (el === document.body || el === document.documentElement || el.id === 'root') return false;
-    if (rect.width < 120 || rect.height < 80) return false;
+    
+    // Exclude elements matching targetSelector (they have their own media/custom animations)
+    if (el.matches(this.targetSelector)) return false;
+    
+    // Size check: must be at least a small block element (like an icon wrapper or badge)
+    if (rect.width < 24 || rect.height < 24) return false;
     
     // Exclude large full-viewport layout sections/wrappers
     if (rect.width >= window.innerWidth * 0.9 || rect.height >= window.innerHeight * 0.9) return false;
-
-    // Check if the element contains children (it must be a layout container, not a leaf tag)
-    if (el.childElementCount === 0) return false;
 
     // 1. Box shadow (standard visual boundary for modern cards)
     const hasShadow = style.boxShadow !== 'none' && style.boxShadow !== '';
@@ -186,7 +187,9 @@ export class DomScanner {
     const ay = rect.top + scrollY;
     const w = rect.width;
     const h = rect.height;
-    const thick = 15;
+    
+    // Scale wall thickness dynamically with container size, capping between 4px and 15px
+    const thick = Math.max(4, Math.min(15, w / 4, h / 4));
     
     // Add transition if not already set
     if (!card.style.transition) {
