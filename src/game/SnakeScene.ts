@@ -15,6 +15,7 @@ export class SnakeScene extends Phaser.Scene {
   private gameUI!: GameUI;
   private domManager!: DomManager;
   private inputManager!: InputManager;
+  private originalParent: HTMLElement | null = null;
 
   private moveTimer: number = 0;
   private score: number = 0;
@@ -62,6 +63,11 @@ export class SnakeScene extends Phaser.Scene {
       this.cameras.main.scrollY = 0;
     }
 
+    // Keep track of the original parent container of the canvas for dynamic restoration
+    if (this.game && this.game.canvas) {
+      this.originalParent = this.game.canvas.parentElement;
+    }
+
     this.audioManager = new AudioManager();
     this.audioManager.init();
 
@@ -104,13 +110,19 @@ export class SnakeScene extends Phaser.Scene {
     this.isGameOver = false;
 
     const canvas = this.game.canvas;
-    const container = document.getElementById('phaser-game-container');
-    if (container) {
-      container.appendChild(canvas);
+    
+    // Dynamically restore to the recorded parent, with fallbacks
+    if (this.originalParent) {
+      this.originalParent.appendChild(canvas);
     } else {
-      const shell = document.getElementById('game-container-shell');
-      if (shell) {
-        shell.appendChild(canvas);
+      const container = document.getElementById('phaser-game-container');
+      if (container) {
+        container.appendChild(canvas);
+      } else {
+        const shell = document.getElementById('game-container-shell');
+        if (shell) {
+          shell.appendChild(canvas);
+        }
       }
     }
 
@@ -140,20 +152,33 @@ export class SnakeScene extends Phaser.Scene {
     // Clear any running CSS animation timers to prevent memory leaks and style overrides
     DomAnimator.clearAll();
 
-    // Restore DOM elements styles
+    // Restore DOM elements styles non-destructively
     const eatenElements = document.querySelectorAll('[data-eaten], [data-card-eaten], .card-eaten');
     eatenElements.forEach((node) => {
       const el = node as HTMLElement;
-      el.style.transform = '';
-      el.style.opacity = '';
-      el.style.visibility = '';
-      el.style.background = '';
-      el.style.borderColor = '';
-      el.style.boxShadow = '';
-      el.style.transition = '';
+      
+      // Restore inline styles back to their recorded pre-eaten state
+      el.style.transform = el.dataset.origTransform || '';
+      el.style.opacity = el.dataset.origOpacity || '';
+      el.style.visibility = el.dataset.origVisibility || '';
+      el.style.background = el.dataset.origBackground || '';
+      el.style.backgroundColor = el.dataset.origBackgroundColor || '';
+      el.style.borderColor = el.dataset.origBorderColor || '';
+      el.style.boxShadow = el.dataset.origBoxShadow || '';
+      el.style.transition = el.dataset.origTransition || '';
+      
       el.classList.remove('card-eaten');
+      
       delete el.dataset.eaten;
       delete el.dataset.cardEaten;
+      delete el.dataset.origTransform;
+      delete el.dataset.origOpacity;
+      delete el.dataset.origVisibility;
+      delete el.dataset.origBackground;
+      delete el.dataset.origBackgroundColor;
+      delete el.dataset.origBorderColor;
+      delete el.dataset.origBoxShadow;
+      delete el.dataset.origTransition;
     });
   }
 
@@ -296,7 +321,7 @@ export class SnakeScene extends Phaser.Scene {
     document.body.style.backgroundColor = 'black';
     document.body.style.transition = 'background-color 1s ease';
 
-    const root = document.getElementById('root');
+    const root = document.getElementById('root') || document.querySelector('main') || document.body;
     if (root) {
       root.style.transition = 'all 2.5s cubic-bezier(0.55, 0.085, 0.68, 0.53)';
       root.style.transform = 'rotate(25deg) scale(0) translateY(120vh)';

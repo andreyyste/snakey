@@ -16,31 +16,47 @@ export class DomAnimator {
     this.activeTimeouts.clear();
   }
 
+  /**
+   * Safe utility to store the original CSS layout styles in custom data attributes 
+   * before modifying them. This ensures they can be non-destructively restored.
+   */
+  private static saveOriginalStyle(el: HTMLElement) {
+    if (el.style.transform && !el.dataset.origTransform) el.dataset.origTransform = el.style.transform;
+    if (el.style.opacity && !el.dataset.origOpacity) el.dataset.origOpacity = el.style.opacity;
+    if (el.style.visibility && !el.dataset.origVisibility) el.dataset.origVisibility = el.style.visibility;
+    if (el.style.background && !el.dataset.origBackground) el.dataset.origBackground = el.style.background;
+    if (el.style.backgroundColor && !el.dataset.origBackgroundColor) el.dataset.origBackgroundColor = el.style.backgroundColor;
+    if (el.style.borderColor && !el.dataset.origBorderColor) el.dataset.origBorderColor = el.style.borderColor;
+    if (el.style.boxShadow && !el.dataset.origBoxShadow) el.dataset.origBoxShadow = el.style.boxShadow;
+    if (el.style.transition && !el.dataset.origTransition) el.dataset.origTransition = el.style.transition;
+  }
+
   public static animateEat(item: IDomBody, domBodies: IDomBody[]) {
-    if (item.element) {
-      if (item.type === 'cardWall') {
-        item.element.dataset.cardEaten = 'true';
-      } else {
-        item.element.dataset.eaten = 'true';
-      }
+    const el = item.element;
+    if (!el) return;
+
+    this.saveOriginalStyle(el);
+
+    if (item.type === 'cardWall') {
+      el.dataset.cardEaten = 'true';
+    } else {
+      el.dataset.eaten = 'true';
     }
 
     // Mark descendants as eaten to avoid "ghost" collisions, except for cardWall
-    if (item.element && item.type !== 'cardWall') {
+    if (item.type !== 'cardWall') {
       domBodies.forEach(b => {
-        if (!b.hasBeenEaten && b !== item && item.element.contains(b.element)) {
+        if (!b.hasBeenEaten && b !== item && el.contains(b.element)) {
           b.hasBeenEaten = true;
           if (b.element) {
+            this.saveOriginalStyle(b.element);
             b.element.dataset.eaten = 'true';
+            b.element.style.transform = 'scale(0)';
+            b.element.style.opacity = '0';
           }
-          b.element.style.transform = 'scale(0)';
-          b.element.style.opacity = '0';
         }
       });
     }
-
-    const el = item.element;
-    if (!el) return;
 
     if (item.type === 'wall') {
       el.style.transform = 'scale(0) rotate(90deg)';
@@ -51,6 +67,14 @@ export class DomAnimator {
         .forEach(b => (b.hasBeenEaten = true));
     } else if (item.type === 'cardWall') {
       el.classList.add('card-eaten');
+      
+      // Fallback for general websites: make card outline/background transparent inline
+      el.style.transition = 'background-color 0.5s ease, border-color 0.5s ease, box-shadow 0.5s ease, background 0.5s ease';
+      el.style.background = 'transparent';
+      el.style.backgroundColor = 'transparent';
+      el.style.borderColor = 'transparent';
+      el.style.boxShadow = 'none';
+
       // Mark all wall segments of this card as eaten
       domBodies
         .filter(b => b.type === 'cardWall' && b.element === el)
