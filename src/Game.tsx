@@ -10,8 +10,8 @@ export default function Game({ onScoreUpdate }: { onScoreUpdate: (score: number)
 
     const config: Phaser.Types.Core.GameConfig = {
       type: Phaser.AUTO,
-      width: 800,
-      height: 600,
+      width: window.innerWidth,
+      height: window.innerHeight,
       parent: gameRef.current,
       transparent: true,
       physics: {
@@ -33,5 +33,5 @@ export default function Game({ onScoreUpdate }: { onScoreUpdate: (score: number)
     };
   }, [onScoreUpdate]);
 
-  return <div ref={gameRef} id="phaser-game-container" className="w-full h-full relative flex items-center justify-center overflow-hidden" />;
+  return <div ref={gameRef} id="phaser-game-container" className="fixed top-0 left-0 w-screen h-screen pointer-events-none z-[999999] overflow-hidden" />;
 }

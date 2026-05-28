@@ -26,20 +26,9 @@ export class DomScanner {
   public static scan(scrollX: number, scrollY: number, gameCanvas: HTMLCanvasElement | null = null, gameContainer: HTMLElement | null = null): IDomBody[] {
     const domBodies: IDomBody[] = [];
 
-    // 1. First Pass: Find all text nodes recursively (including inside Shadow DOM)
-    const textNodes: Text[] = [];
-    this.findTextNodes(document.body, textNodes, gameCanvas, gameContainer);
-    
-    // Replace text nodes with edible character spans
-    textNodes.forEach(textNode => {
-      this.replaceTextNodeWithSpans(textNode);
-    });
-
-    // 2. Second Pass: Traverse the DOM recursively to collect characters and matching elements
+    // In lazy-splitting mode, we do NOT run the first pass of splitting all text nodes.
+    // Instead, we directly collect edible elements (including unsplit text containers).
     this.collectEdibleElements(document.body, scrollX, scrollY, domBodies, gameCanvas, gameContainer);
-
-    // 3. Add game container walls (acting as physical barriers until escape pill is eaten)
-    this.addGameShellWalls(scrollX, scrollY, domBodies, gameContainer);
 
     return domBodies;
   }
@@ -86,7 +75,7 @@ export class DomScanner {
    * Recursively walks the DOM tree to locate all valid text nodes containing renderable characters.
    * Traverses into elements, element children, and Shadow DOM boundaries.
    */
-  private static findTextNodes(node: Node, result: Text[], gameCanvas: HTMLCanvasElement | null = null, gameContainer: HTMLElement | null = null) {
+  public static findTextNodes(node: Node, result: Text[], gameCanvas: HTMLCanvasElement | null = null, gameContainer: HTMLElement | null = null) {
     if (node.nodeType === Node.TEXT_NODE) {
       if (node.nodeValue && node.nodeValue.trim()) {
         const parent = node.parentNode as HTMLElement;
@@ -115,7 +104,7 @@ export class DomScanner {
    * Replaces a single text node with a document fragment containing individual spans 
    * for each character. This allows the snake to eat text letter-by-letter.
    */
-  private static replaceTextNodeWithSpans(textNode: Text) {
+  public static replaceTextNodeWithSpans(textNode: Text) {
     const text = textNode.nodeValue || '';
     const parent = textNode.parentNode;
     if (!parent) return;
@@ -195,6 +184,16 @@ export class DomScanner {
             id: `char-${domBodies.length}`,
             hasBeenEaten: false,
             type: 'char'
+          });
+        }
+        // Check if it is a text container that hasn't been split yet
+        else if (this.hasUnsplitDirectText(el)) {
+          domBodies.push({
+            element: el,
+            body: new Phaser.Geom.Rectangle(rect.left + scrollX, rect.top + scrollY, rect.width, rect.height),
+            id: `text-container-${domBodies.length}`,
+            hasBeenEaten: false,
+            type: 'textContainer'
           });
         }
         // Check if it is a card container (exclude from targetSelector matching to prevent duplicate collisions)
@@ -297,5 +296,34 @@ export class DomScanner {
         });
       });
     }
+  }
+
+  /**
+   * Helper to split an element's text nodes into individual edible character spans.
+   */
+  public static splitElementIntoSpans(el: HTMLElement) {
+    const textNodes: Text[] = [];
+    DomScanner.findTextNodes(el, textNodes);
+    textNodes.forEach(textNode => {
+      DomScanner.replaceTextNodeWithSpans(textNode);
+    });
+  }
+
+  /**
+   * Checks if an element contains direct unsplit text node content.
+   */
+  private static hasUnsplitDirectText(el: HTMLElement): boolean {
+    if (el.classList.contains('edible-char') || el.closest('.edible-char')) return false;
+
+    // Check if it contains direct text nodes with content
+    const hasText = Array.from(el.childNodes).some(n => 
+      n.nodeType === Node.TEXT_NODE && 
+      n.nodeValue && 
+      n.nodeValue.trim() !== ''
+    );
+    if (!hasText) return false;
+
+    // Check if it doesn't already contain split character spans
+    return el.querySelector('.edible-char') === null;
   }
 }

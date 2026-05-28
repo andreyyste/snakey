@@ -73,32 +73,52 @@ export class SnakeScene extends Phaser.Scene {
    * Initializes sub-managers, cores, scene events, and starts window event bindings.
    */
   create() {
+    this.isEscaped = true;
+    this.isGameOver = false;
+    this.finalPhaseStarted = false;
+    this.score = 0;
+    this.moveTimer = 0;
+
+    // Direct fixed viewport overlay styling for Chrome Extension
+    const canvas = this.game.canvas;
+    document.body.appendChild(canvas);
+    canvas.style.position = 'fixed';
+    canvas.style.top = '0px';
+    canvas.style.left = '0px';
+    canvas.style.width = '100vw';
+    canvas.style.height = '100vh';
+    canvas.style.zIndex = '999999';
+    canvas.style.pointerEvents = 'none';
+
+    this.scale.resize(window.innerWidth, window.innerHeight);
+
     if (this.cameras && this.cameras.main) {
-      this.cameras.main.scrollX = 0;
-      this.cameras.main.scrollY = 0;
+      this.cameras.main.scrollX = window.scrollX;
+      this.cameras.main.scrollY = window.scrollY;
     }
 
     this.audioManager = new AudioManager();
     this.audioManager.init();
 
+    // Spawn snake centered in the active viewport
+    const offset = GRID_SIZE / 2;
+    const startX = Math.floor((window.scrollX + window.innerWidth / 2) / GRID_SIZE) * GRID_SIZE + offset;
+    const startY = Math.floor((window.scrollY + window.innerHeight / 2) / GRID_SIZE) * GRID_SIZE + offset;
+
     this.snake = new Snake(this);
-    this.snake.create();
+    this.snake.create(startX, startY);
 
     this.food = new Food(this);
     this.food.create();
-    this.food.reposition(this.snake);
+    this.food.hide();
 
     this.domManager = new DomManager(this);
+    this.domManager.init();
+
     this.inputManager = new InputManager(this, this.audioManager);
 
     this.gameUI = new GameUI(this);
     this.gameUI.create();
-
-    this.isGameOver = false;
-    this.isEscaped = false;
-    this.finalPhaseStarted = false;
-    this.score = 0;
-    this.moveTimer = 0;
 
     // Automatically invoke restoration logic if the scene is shutdown or destroyed 
     // to prevent visual glitches and memory leak carries.

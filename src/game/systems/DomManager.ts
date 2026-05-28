@@ -128,13 +128,73 @@ export class DomManager {
    */
   public checkCollisions(headRect: Phaser.Geom.Rectangle): IDomBody[] {
     const hits: IDomBody[] = [];
+    const newBodies: IDomBody[] = [];
+
+    // Create an expanded bounding box for checking textContainer proximity
+    const buffer = 100; // split text container when snake is within 100px
+    const proximityRect = new Phaser.Geom.Rectangle(
+      headRect.x - buffer,
+      headRect.y - buffer,
+      headRect.width + buffer * 2,
+      headRect.height + buffer * 2
+    );
+
     for (const item of this.domBodies) {
-      if (!item.hasBeenEaten && Phaser.Geom.Intersects.RectangleToRectangle(item.body, headRect)) {
-        item.hasBeenEaten = true;
-        hits.push(item);
+      if (item.hasBeenEaten) continue;
+
+      if (item.type === 'textContainer') {
+        // Check proximity intersection
+        if (Phaser.Geom.Intersects.RectangleToRectangle(item.body, proximityRect)) {
+          item.hasBeenEaten = true; // prevent double splitting
+          this.splitTextContainer(item, newBodies);
+        }
+      } else {
+        // Standard precise collision
+        if (Phaser.Geom.Intersects.RectangleToRectangle(item.body, headRect)) {
+          item.hasBeenEaten = true;
+          hits.push(item);
+        }
       }
     }
+
+    if (newBodies.length > 0) {
+      this.domBodies.push(...newBodies);
+    }
+
     return hits;
+  }
+
+  /**
+   * Dynamically splits a text container into character spans and registers them in our active collision list.
+   */
+  private splitTextContainer(item: IDomBody, newBodies: IDomBody[]) {
+    const el = item.element;
+    if (!el) return;
+
+    // Split the element's text nodes into individual character spans
+    DomScanner.splitElementIntoSpans(el);
+
+    // Retrieve the newly created spans
+    const chars = el.querySelectorAll('.edible-char');
+    const scrollX = window.scrollX;
+    const scrollY = window.scrollY;
+
+    chars.forEach((charEl, idx) => {
+      const htmlCharEl = charEl as HTMLElement;
+      // Skip if already eaten
+      if (htmlCharEl.dataset.eaten === 'true') return;
+
+      const rect = htmlCharEl.getBoundingClientRect();
+      if (rect.width > 0 && rect.height > 0) {
+        newBodies.push({
+          element: htmlCharEl,
+          body: new Phaser.Geom.Rectangle(rect.left + scrollX, rect.top + scrollY, rect.width, rect.height),
+          id: `char-lazy-${item.id}-${idx}`,
+          hasBeenEaten: false,
+          type: 'char'
+        });
+      }
+    });
   }
   
   /**

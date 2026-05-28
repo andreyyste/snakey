@@ -21,7 +21,11 @@ export class GameUI {
       this.gameOverContainer.destroy();
     }
 
-    const overlay = this.scene.add.rectangle(CANVAS_WIDTH/2, CANVAS_HEIGHT/2, CANVAS_WIDTH, CANVAS_HEIGHT, 0xffffff, 0.8);
+    const width = this.scene.scale.width;
+    const height = this.scene.scale.height;
+
+    // Overlay centered locally in container
+    const overlay = this.scene.add.rectangle(0, 0, width, height, 0xffffff, 0.8);
     
     const box = this.scene.add.graphics();
     const boxW = 360; 
@@ -45,7 +49,8 @@ export class GameUI {
       fontStyle: '600'
     }).setOrigin(0.5);
 
-    this.gameOverContainer = this.scene.add.container(CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2, [overlay, box, title, subtitle]);
+    this.gameOverContainer = this.scene.add.container(width / 2, height / 2, [overlay, box, title, subtitle]);
+    this.gameOverContainer.setScrollFactor(0);
     this.gameOverContainer.setDepth(200);
 
     this.gameOverContainer.setScale(0.9);
