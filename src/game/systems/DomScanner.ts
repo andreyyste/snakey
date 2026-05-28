@@ -104,32 +104,49 @@ export class DomScanner {
    * Replaces a single text node with a document fragment containing individual spans 
    * for each character. This allows the snake to eat text letter-by-letter.
    */
-  public static replaceTextNodeWithSpans(textNode: Text) {
+  public static replaceTextNodeWithSpans(textNode: Text, splitByLetters: boolean = false) {
     const text = textNode.nodeValue || '';
     const parent = textNode.parentNode;
     if (!parent) return;
 
     const fragment = document.createDocumentFragment();
-    let hasValidWord = false;
+    let hasValidContent = false;
 
-    // Split text into words, preserving spaces and word boundaries
-    const words = text.split(/(\s+)/);
-
-    words.forEach(part => {
-      if (part.trim() === '') {
-        fragment.appendChild(document.createTextNode(part));
-      } else {
-        const span = document.createElement('span');
-        span.textContent = part;
-        span.className = 'edible-char';
-        span.style.transition = 'all 0.3s ease';
-        span.style.display = 'inline-block';
-        fragment.appendChild(span);
-        hasValidWord = true;
+    if (splitByLetters) {
+      // Split character-by-character for large fonts / headings
+      for (let i = 0; i < text.length; i++) {
+        const char = text[i];
+        if (char.trim() === '') {
+          fragment.appendChild(document.createTextNode(char));
+        } else {
+          const span = document.createElement('span');
+          span.textContent = char;
+          span.className = 'edible-char';
+          span.style.transition = 'all 0.3s ease';
+          span.style.display = 'inline-block';
+          fragment.appendChild(span);
+          hasValidContent = true;
+        }
       }
-    });
+    } else {
+      // Split word-by-word for standard body text (saves performance)
+      const words = text.split(/(\s+)/);
+      words.forEach(part => {
+        if (part.trim() === '') {
+          fragment.appendChild(document.createTextNode(part));
+        } else {
+          const span = document.createElement('span');
+          span.textContent = part;
+          span.className = 'edible-char';
+          span.style.transition = 'all 0.3s ease';
+          span.style.display = 'inline-block';
+          fragment.appendChild(span);
+          hasValidContent = true;
+        }
+      });
+    }
 
-    if (hasValidWord) {
+    if (hasValidContent) {
       parent.replaceChild(fragment, textNode);
     }
   }
@@ -189,25 +206,13 @@ export class DomScanner {
         }
         // Check if it is a text container that hasn't been split yet
         else if (this.hasUnsplitDirectText(el)) {
-          if (this.isHeadingOrLargeText(el, style)) {
-            domBodies.push({
-              element: el,
-              body: new Phaser.Geom.Rectangle(rect.left + scrollX, rect.top + scrollY, rect.width, rect.height),
-              id: `text-container-${domBodies.length}`,
-              hasBeenEaten: false,
-              type: 'textContainer'
-            });
-          } else {
-            // Treat body/paragraph text as a solid block.
-            // Eaten in one bite (type: 'media') for maximum layout integrity and performance!
-            domBodies.push({
-              element: el,
-              body: new Phaser.Geom.Rectangle(rect.left + scrollX, rect.top + scrollY, rect.width, rect.height),
-              id: `block-text-${domBodies.length}`,
-              hasBeenEaten: false,
-              type: 'media'
-            });
-          }
+          domBodies.push({
+            element: el,
+            body: new Phaser.Geom.Rectangle(rect.left + scrollX, rect.top + scrollY, rect.width, rect.height),
+            id: `text-container-${domBodies.length}`,
+            hasBeenEaten: false,
+            type: 'textContainer'
+          });
         }
         // Check if it is a card container (exclude from targetSelector matching to prevent duplicate collisions)
         else if (this.isCardElement(el, style, rect)) {
@@ -315,10 +320,15 @@ export class DomScanner {
    * Helper to split an element's text nodes into individual edible character spans.
    */
   public static splitElementIntoSpans(el: HTMLElement) {
+    const style = window.getComputedStyle(el);
+    const fontSize = parseFloat(style.fontSize) || 16;
+    // Split by letters if it is a heading or has a large font size (>= 20px)
+    const splitByLetters = el.matches('h1, h2, h3, h4, h5, h6') || fontSize >= 20;
+
     const textNodes: Text[] = [];
     DomScanner.findTextNodes(el, textNodes);
     textNodes.forEach(textNode => {
-      DomScanner.replaceTextNodeWithSpans(textNode);
+      DomScanner.replaceTextNodeWithSpans(textNode, splitByLetters);
     });
   }
 
@@ -338,24 +348,5 @@ export class DomScanner {
 
     // Check if it doesn't already contain split character spans
     return el.querySelector('.edible-char') === null;
-  }
-
-  /**
-   * Helper to check if an element represents a heading tag or has a large font-size.
-   */
-  private static isHeadingOrLargeText(el: HTMLElement, style: CSSStyleDeclaration): boolean {
-    const tagName = el.tagName.toLowerCase();
-    if (['h1', 'h2', 'h3', 'h4', 'h5', 'h6'].includes(tagName)) {
-      return true;
-    }
-
-    const fontSizeStr = style.fontSize;
-    if (fontSizeStr && fontSizeStr.endsWith('px')) {
-      const fontSize = parseFloat(fontSizeStr);
-      if (fontSize >= 20) {
-        return true;
-      }
-    }
-    return false;
   }
 }
