@@ -189,13 +189,25 @@ export class DomScanner {
         }
         // Check if it is a text container that hasn't been split yet
         else if (this.hasUnsplitDirectText(el)) {
-          domBodies.push({
-            element: el,
-            body: new Phaser.Geom.Rectangle(rect.left + scrollX, rect.top + scrollY, rect.width, rect.height),
-            id: `text-container-${domBodies.length}`,
-            hasBeenEaten: false,
-            type: 'textContainer'
-          });
+          if (this.isHeadingOrLargeText(el, style)) {
+            domBodies.push({
+              element: el,
+              body: new Phaser.Geom.Rectangle(rect.left + scrollX, rect.top + scrollY, rect.width, rect.height),
+              id: `text-container-${domBodies.length}`,
+              hasBeenEaten: false,
+              type: 'textContainer'
+            });
+          } else {
+            // Treat body/paragraph text as a solid block.
+            // Eaten in one bite (type: 'media') for maximum layout integrity and performance!
+            domBodies.push({
+              element: el,
+              body: new Phaser.Geom.Rectangle(rect.left + scrollX, rect.top + scrollY, rect.width, rect.height),
+              id: `block-text-${domBodies.length}`,
+              hasBeenEaten: false,
+              type: 'media'
+            });
+          }
         }
         // Check if it is a card container (exclude from targetSelector matching to prevent duplicate collisions)
         else if (this.isCardElement(el, style, rect)) {
@@ -326,5 +338,24 @@ export class DomScanner {
 
     // Check if it doesn't already contain split character spans
     return el.querySelector('.edible-char') === null;
+  }
+
+  /**
+   * Helper to check if an element represents a heading tag or has a large font-size.
+   */
+  private static isHeadingOrLargeText(el: HTMLElement, style: CSSStyleDeclaration): boolean {
+    const tagName = el.tagName.toLowerCase();
+    if (['h1', 'h2', 'h3', 'h4', 'h5', 'h6'].includes(tagName)) {
+      return true;
+    }
+
+    const fontSizeStr = style.fontSize;
+    if (fontSizeStr && fontSizeStr.endsWith('px')) {
+      const fontSize = parseFloat(fontSizeStr);
+      if (fontSize >= 20) {
+        return true;
+      }
+    }
+    return false;
   }
 }
