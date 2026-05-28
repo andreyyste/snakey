@@ -9,7 +9,10 @@ A modern, interactive Chrome Extension that turns the web into your snake's sand
 - **One-Click Activation**: No initial arcade cabinet screen or normal-phase score requirements. Clicking the extension icon in the toolbar immediately releases the snake at the center of your current screen viewport.
 - **Proximity-Based Lazy DOM Splitting (Performance Optimization)**:
   - **Zero Startup Lag**: Heavy webpages (like Wikipedia or complex dashboards) are scanned in milliseconds without UI freezing, because text nodes are *not* split at startup.
-  - **Just-In-Time Splitting**: Text paragraphs, lists, and headers are represented as single blocks. They are dynamically split into individual edible character spans *only* when the snake crawls within a **100px buffer** of them.
+  - **Just-In-Time Splitting**: Text paragraphs, lists, and headers are represented as single blocks. They are dynamically split *only* when the snake crawls within a **100px buffer** of them.
+  - **Conditional Text Splitting**: The splitting logic adapts based on styling:
+    - **Letter-by-Letter**: Large text (computed font-size `>= 20px`) and heading elements (`<h1>`-`<h6>`) are split character-by-character to preserve the classic letter-eating aesthetic on titles.
+    - **Word-by-Word**: Standard body paragraphs and list items are split word-by-word, reducing DOM nodes and physics elements by **5x-6x** to keep layout operations completely lag-free.
   - **Memory Efficiency**: Keeps the DOM lightweight and physics loops operating at high frame rates, even on massive webpages.
 - **Universal DOM Devouring**:
   - Eats leaf characters and text.
@@ -103,7 +106,7 @@ The `DomScanner` acts as the parser. It crawls the webpage DOM and generates tar
 ### ⚙️ 2. `DomManager` (The Orchestrator)
 The `DomManager` acts as the main bridge keeping state, listening to browser viewport changes, and performing collision calculations.
 - **Dynamic Mutation Observer**: Integrates a `MutationObserver` to watch for dynamically added elements (lazy-loaded elements, infinite scrolling) and triggers rescans safely.
-- **Proximity Just-In-Time Splitting**: Runs proximity checks against `textContainer` elements using a **100px buffer** around the snake's head. When the snake crawls close to a paragraph, that paragraph's text nodes are split character-by-character into individual `.edible-char` spans *just-in-time*, ensuring absolutely zero lag.
+- **Proximity Just-In-Time Splitting**: Runs proximity checks against `textContainer` elements using a **100px buffer** around the snake's head. When the snake crawls close to a paragraph, that paragraph's text nodes are split *just-in-time* (letter-by-letter for headings/large text, word-by-word for standard body text), ensuring absolutely zero lag.
 - **Viewport Scroll-Aware Bounds**: Keeps snake movement bound within the current viewport (`window.scrollX` / `window.scrollY` limits), allowing the snake to feel like it scrolls dynamically with the page.
 - **Collision Syncing**: Compares Phaser's head coordinates to `domBodies` coordinates (updated dynamically on resize/scroll) and flags them in memory.
 - **Canvas Lifecycle Restoration**: When the game restarts, it completely restores the Phaser canvas back to its original layout, strips off full-screen fixed styling, resets the scale resolution, and cleans up observers.
