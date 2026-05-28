@@ -23,6 +23,7 @@ export class DomManager {
   private domBodies: IDomBody[] = [];
   private observer: MutationObserver | null = null;
   private isScanning: boolean = false;
+  private debounceTimer: any = null;
   
   constructor(scene: Phaser.Scene) {
     this.scene = scene;
@@ -63,10 +64,13 @@ export class DomManager {
       }
 
       if (shouldRescan) {
-        // Disconnect temporarily to prevent mutation events while processing and splitting text.
-        this.observer?.disconnect();
-        this.scanDomElements();
-        this.observer?.observe(document.body, { childList: true, subtree: true });
+        // Debounce rescan to prevent main thread freezing during active layout mutations
+        if (this.debounceTimer) clearTimeout(this.debounceTimer);
+        this.debounceTimer = setTimeout(() => {
+          this.observer?.disconnect();
+          this.scanDomElements();
+          this.observer?.observe(document.body, { childList: true, subtree: true });
+        }, 800);
       }
     });
 
@@ -139,8 +143,15 @@ export class DomManager {
       headRect.height + buffer * 2
     );
 
+    // Filter elements vertically close to the snake's head to optimize long scrollable pages
+    const minY = headRect.y - 400;
+    const maxY = headRect.y + 400;
+
     for (const item of this.domBodies) {
       if (item.hasBeenEaten) continue;
+
+      // Skip elements that are vertically far away from the head to avoid expensive intersection checks
+      if (item.body.y < minY || item.body.y > maxY) continue;
 
       if (item.type === 'textContainer') {
         // Check proximity intersection
@@ -226,6 +237,10 @@ export class DomManager {
     if (this.observer) {
       this.observer.disconnect();
       this.observer = null;
+    }
+    if (this.debounceTimer) {
+      clearTimeout(this.debounceTimer);
+      this.debounceTimer = null;
     }
   }
 }

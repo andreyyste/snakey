@@ -110,25 +110,26 @@ export class DomScanner {
     if (!parent) return;
 
     const fragment = document.createDocumentFragment();
-    let hasValidChar = false;
+    let hasValidWord = false;
 
-    for (let i = 0; i < text.length; i++) {
-      const char = text[i];
-      // Keep whitespace as normal text nodes to preserve original HTML layout flow.
-      if (char.trim() === '') {
-        fragment.appendChild(document.createTextNode(char));
+    // Split text into words, preserving spaces and word boundaries
+    const words = text.split(/(\s+)/);
+
+    words.forEach(part => {
+      if (part.trim() === '') {
+        fragment.appendChild(document.createTextNode(part));
       } else {
         const span = document.createElement('span');
-        span.textContent = char;
+        span.textContent = part;
         span.className = 'edible-char';
         span.style.transition = 'all 0.3s ease';
         span.style.display = 'inline-block';
         fragment.appendChild(span);
-        hasValidChar = true;
+        hasValidWord = true;
       }
-    }
+    });
 
-    if (hasValidChar) {
+    if (hasValidWord) {
       parent.replaceChild(fragment, textNode);
     }
   }
