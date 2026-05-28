@@ -1,109 +1,80 @@
-# 🐍 Snakey - Escape The Matrix
+# 🐍 Snakey Chrome Extension - DOM Eating Snake
 
-[![Live Demo](https://img.shields.io/badge/Live%20Demo-rasis.me-blue?style=for-the-badge)](https://rasis.me)
-
-A modern twist on the classic Snake game, built with **React 19**, **Vite**, **Tailwind CSS**, and **Phaser 3**.
-
-What starts as a simple, confined 800x600 arcade game quickly turns into an interactive web-breaking experience where the snake breaks out of its canvas and consumes the actual DOM elements of the website.
+A modern, interactive Chrome Extension that turns the web into your snake's sandbox. With a single click in your browser toolbar, a snake is released directly onto any active webpage, allowing you to slither around and devour all DOM elements (text characters, headings, images, cards, inputs, and interactive widgets) in real time!
 
 ---
 
 ## ✨ Features
 
-- **Classic Gameplay**: A polished retro snake experience with smooth grid-based movement and responsive controls.
-- **Escape Mode**: Upon reaching a score of 100, the mysterious **Red Pill** appears. Eating it shatters the boundaries of the canvas, allowing the snake to roam freely across the entire webpage.
-- **Universal DOM Eating Sandbox**: Fully decoupled from local stylesheets and static class configurations. The snake can crawl on **any website** (e.g., Wikipedia, Google, blogs) and physically consume HTML elements (text, dropdowns, inputs, progress indicators, media, and cards) with dynamic visual card background extraction.
-- **Dynamic Content Support**: Relies on a reactive observer that immediately adapts when new elements are injected or loaded dynamically (e.g. lazy-loaded content, scrolls).
-- **Cinematic Viewport Finale**: Once you're done eating elements, crash the snake into any edge of the browser viewport to trigger a dramatic end-game sequence where the website collapses, folds, and falls off the screen, leaving a pitch-black void before resetting.
+- **One-Click Activation**: No initial arcade cabinet screen or normal-phase score requirements. Clicking the extension icon in the toolbar immediately releases the snake at the center of your current screen viewport.
+- **Proximity-Based Lazy DOM Splitting (Performance Optimization)**:
+  - **Zero Startup Lag**: Heavy webpages (like Wikipedia or complex dashboards) are scanned in milliseconds without UI freezing, because text nodes are *not* split at startup.
+  - **Just-In-Time Splitting**: Text paragraphs, lists, and headers are represented as single blocks. They are dynamically split into individual edible character spans *only* when the snake crawls within a **100px buffer** of them.
+  - **Memory Efficiency**: Keeps the DOM lightweight and physics loops operating at high frame rates, even on massive webpages.
+- **Universal DOM Devouring**:
+  - Eats leaf characters and text.
+  - Collapses visual cards using style-based layout bounding clone boxes.
+  - Triggers custom interactive behaviors on special elements: drains progress bars, vibrates input fields, clicks checkboxes, expansions on dropdown selectors, and speeds up media playbacks.
+- **Website Collapse Finale**: If the snake crawls off the page limits, the entire website rotates, blurs, and slides into a black void before the page reloads.
 
 ---
 
-## 🧠 The DOM Destruction Engine (Architecture)
+## 🛠️ Tech Stack
 
-The heart of *Snakey* is its custom DOM parser and rendering pipeline, built to bridge the gap between Phaser's WebGL/Canvas game loops and the browser's Document Object Model (DOM).
-
-```
-                 [ Phaser Game Loop ]
-                          │
-            Detects head coordinate overlap
-                          │
-                          ▼
-                    [ DomManager ]
-             Orchestrates & tracks state
-             │            │            │
-      Scans dynamic       │      Triggers anims
-      DOM updates         │      upon chomps
-             │            │            │
-             ▼            ▼            ▼
-       [ DomScanner ]  [ Physics ]  [ DomAnimator ]
-      Recurses shadow  Synchronizes  Applies tag-specific
-       DOM / elements   rect bounds  CSS & pseudo transitions
-```
-
-### 🔍 1. `DomScanner` (The Parser)
-The `DomScanner` acts as the parser. It crawls the webpage DOM and generates target coordinate bodies for Phaser.
-- **Recursive Tree Walking**: Walks the DOM tree node-by-node. If it finds text nodes, it safely splits them character-by-character and wraps them inside individual `.edible-char` spans to allow letter-by-letter consumption.
-- **Shadow DOM Traversal**: Recursively traverses shadow roots (`shadowRoot`), unlocking the ability to scan inside custom Web Components and embedded widgets.
-- **Computed Visibility Filtering**: Checks computed style values (`window.getComputedStyle`) to ignore elements hidden via `display: none`, `visibility: hidden`, or `opacity: 0`.
-- **Phaser Canvas Excluder**: Automatically identifies the Phaser game canvas and prevents the snake from eating the container rendering the game.
-- **Multi-Element Mapping**: Targets a wide array of tags: `img`, `svg`, `video`, `input`, `textarea`, `button`, `a`, `select`, `progress`, `meter`, `canvas`, `hr`, `iframe`, and `audio`.
-- **Universal Card Detection**: Dynamically identifies card-like block layouts on any webpage using style-based heuristics (backgrounds, borders, shadows, and dimensions) rather than static class name checks.
-
-### ⚙️ 2. `DomManager` (The Orchestrator)
-The `DomManager` acts as the main bridge keeping state and listening to browser viewport changes.
-- **Dynamic Mutation Observer**: Integrates a `MutationObserver` to watch for dynamically added elements (lazy-loaded elements, infinite scrolling) and triggers rescans safely by temporarily disconnecting/connecting to prevent infinite loops.
-- **Viewport Scroll-Aware Bounds**: Keeps snake movement bound within the current viewport (`window.scrollX` / `window.scrollY` limits), allowing the snake to feel like it scrolls dynamically with the page.
-- **Collision Syncing**: Compares Phaser's head coordinates to `domBodies` coordinates (updated dynamically on resize/scroll) and flags them in memory.
-- **Canvas Lifecycle Restoration**: When the game restarts, it completely restores the Phaser canvas back to its original layout container (`#game-container-shell`), strips off full-screen fixed styling, resets the scale resolution back to `800x600`, and cleans up observers.
-
-### 🎨 3. `DomAnimator` (The Animator)
-The `DomAnimator` triggers specific transitions on HTML elements when eaten by the snake:
-- **`select` (Dropdown)**: Dynamically expands the dropdown option list (`select.size`) for 300ms, simulating a visual dropdown click, before chomping and shrinking.
-- **`hr` (Horizontal Line)**: Scales horizontally down (`scaleX(0)`) to center before fading.
-- **`progress` / `meter`**: Animates the value bar draining down to 0 over 200ms before scaling to 0.
-- **`input[type=checkbox]` / `input[type=radio]`**: Triggers a rapid click toggle (6 times at 50ms interval) to simulate click madness before disappearing.
-- **`input` / `textarea`**: Shakes horizontally (vibration effect) for 400ms before spinning and shrinking.
-- **`audio` / `video`**: Instantly speeds up playback rate to 3.0x and fades out audio volume to 0 (if playing) before pausing and shrinking.
-- **Universal Card Chomping**: Lazily clones any card's computed styles (shadow, border, background, border-radius) onto an absolutely positioned dynamic background wrapper `div` (`.dynamic-card-bg`), hides the original card background, and scales the wrapper to 0. This allows card backgrounds to crumble on **any website** while keeping inner text intact and edible.
-- **Descendant Cleanup**: Automatically marks all children of eaten elements as eaten to avoid leaving "ghost" collider blocks.
+- **React 19**
+- **Vite 8**
+- **Phaser 3 / Phaser 4 (Phaser.AUTO)**
+- **Tailwind CSS 4**
+- **TypeScript**
+- **Chrome Extension Manifest V3**
 
 ---
 
-## 🚀 Getting Started
+## 🚀 Installation & Loading the Extension
 
-### Prerequisites
-Make sure you have [Node.js](https://nodejs.org/) installed on your machine.
+To install and load the unpacked extension in Chrome:
 
-### Installation
+### 1. Build the Extension Local Directory
+Ensure you have [Node.js](https://nodejs.org/) installed:
 
-1. **Clone the repository**
+1. Clone and enter the extension branch directory:
    ```bash
-   git clone https://github.com/andreyyste/snakey.git
-   cd snakey
+   git clone -b snakey-extension https://github.com/andreyyste/snakey.git snakey-extension
+   cd snakey-extension
    ```
-
-2. **Install dependencies**
+2. Install npm dependencies:
    ```bash
    npm install
    ```
-
-3. **Start the development server**
+3. Compile the production bundles:
    ```bash
-   npm run dev
+   npm run build
    ```
+   *This outputs the extension package files directly to the `dist/` directory, including `manifest.json`, `background.js`, and compiled assets.*
 
-4. **Play!**
-   Open `http://localhost:5173` in your browser. Use the **Arrow Keys** or **WASD** to control the snake.
+### 2. Load the Unpacked Extension in Chrome
+1. Open Google Chrome (or any Chromium-based browser).
+2. Go to the extension settings page: `chrome://extensions/`.
+3. Enable **Developer mode** using the toggle switch in the top-right corner.
+4. Click the **Load unpacked** button in the top-left corner.
+5. Select the **`dist`** folder inside your `snakey-extension` project directory.
+
+### 3. Let the Snake Loose!
+1. Pin the **Snakey** extension icon to your toolbar.
+2. Open any webpage (e.g., [Wikipedia: Snake](https://en.wikipedia.org/wiki/Snake)).
+3. Click the extension icon.
+4. Control the snake using **Arrow Keys** or **WASD**.
+5. Eat the web! Press **SPACE** to restart if you die.
 
 ---
 
-## 🛠️ Built With
+## 📂 Code Architecture
 
-- [React 19](https://react.dev/)
-- [Vite 8](https://vitejs.dev/)
-- [Phaser 3](https://phaser.io/)
-- [Tailwind CSS 4](https://tailwindcss.com/)
-- [TypeScript](https://www.typescriptlang.org/)
+The extension logic sits on top of Phaser and React, utilizing three main custom systems:
+
+1. **[DomScanner.ts](file:///home/andrey/snakey-extension/src/game/systems/DomScanner.ts)**: Recursively parses the DOM tree, identifies interactive elements, handles card boundaries, and groups unsplit text paragraphs.
+2. **[DomManager.ts](file:///home/andrey/snakey-extension/src/game/systems/DomManager.ts)**: Orchestrates viewport collision checks, dynamically triggers just-in-time element splits when the snake approaches, and handles window resize checks.
+3. **[DomAnimator.ts](file:///home/andrey/snakey-extension/src/game/systems/DomAnimator.ts)**: Handles visual css transitions and tag-specific chomping animations.
 
 ---
 
