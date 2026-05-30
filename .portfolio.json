@@ -6,7 +6,7 @@
   "brief": "A Chrome Extension that turns any webpage into a playable sandbox where a snake devours DOM elements in real time.",
   "description": "Snakey is an interactive Chrome Extension that transforms webpage DOM elements into edible targets for a snake built with Phaser. It features a custom DOM parser/rendering engine with performance-optimizing lazy text splitting, universal card devouring, and customized element animations upon collision. Built with React 19, Vite, Phaser, Tailwind CSS, and TypeScript, the extension runs smoothly on heavy websites without interface lag.",
   "tags": ["Chrome Extension", "Phaser", "React", "TypeScript", "Tailwind CSS", "Vite"],
-  "coverImage": null,
+  "coverImage": "https://drive.google.com/uc?export=download&id=1PSnwuA-C4iqJNIWGaapYJTqufO-i_PHr",
   "hasSourceCode": true,
   "liveUrl": "https://rasis.me"
 }
