@@ -1,6 +1,12 @@
 import { motion } from 'framer-motion';
 
 export default function Footer() {
+  const getBookmarkletUrl = () => {
+    if (typeof window === 'undefined') return '#';
+    const origin = window.location.origin;
+    return `javascript:(function(){if(window.SnakeyInjected)return;window.SnakeyInjected=true;var%20css=document.createElement('link');css.rel='stylesheet';css.href='${origin}/bookmarklet/index.css';document.head.appendChild(css);var%20js=document.createElement('script');js.src='${origin}/bookmarklet/index.js';document.body.appendChild(js);})()`;
+  };
+
   return (
     <motion.div
       layout
@@ -44,6 +50,60 @@ export default function Footer() {
             <span className="w-2 h-2 rounded-full bg-blue-600"></span>
             @andreyyste
           </a>
+        </div>
+      </div>
+
+      {/* Bookmarklet Section (Full width) */}
+      <div className="bg-white p-8 rounded-2xl shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)] border border-gray-100 md:col-span-2 relative overflow-hidden group">
+        <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-indigo-50 to-purple-50 rounded-bl-full -z-10 group-hover:scale-110 transition-transform duration-500"></div>
+
+        <div className="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-lg flex items-center justify-center mb-4">
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+          </svg>
+        </div>
+        
+        <h2 className="text-2xl font-bold mb-3 text-gray-900">Snakey Bookmarklet</h2>
+        <p className="text-gray-600 leading-relaxed text-sm mb-6">
+          Play Snakey on any webpage instantly! Drag the button below to your bookmark bar, then click it on any website to let the snake eat its elements.
+        </p>
+
+        <div className="flex flex-col lg:flex-row gap-6 items-start lg:items-center bg-slate-50 p-6 rounded-xl border border-slate-100">
+          <div className="flex-1">
+            <h3 className="font-semibold text-gray-800 mb-2 text-sm">How to Install:</h3>
+            <ol className="list-decimal list-inside text-xs text-gray-600 space-y-1.5">
+              <li>Make sure your browser's <strong>Bookmarks Bar</strong> is visible (Ctrl+Shift+B or Cmd+Shift+B).</li>
+              <li>Drag the <strong>Play Snakey</strong> button to your Bookmarks Bar.</li>
+              <li>Open any website (e.g. Wikipedia) and click the bookmarked link!</li>
+            </ol>
+          </div>
+
+          <div className="flex flex-col items-center justify-center shrink-0 w-full lg:w-auto">
+            <a
+              href={getBookmarkletUrl()}
+              draggable="true"
+              onClick={(e) => {
+                e.preventDefault();
+                alert('Jangan diklik langsung! Tarik (drag) tombol ini ke bilah bookmark (bookmarks bar) browser Anda.');
+              }}
+              className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold rounded-xl shadow-lg shadow-indigo-200 transition-all transform hover:-translate-y-0.5 active:translate-y-0 cursor-grab active:cursor-grabbing text-sm border border-indigo-400/20"
+            >
+              <svg className="w-4 h-4 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 11l5-5m0 0l5 5m-5-5v12" />
+              </svg>
+              Play Snakey
+            </a>
+            <span className="text-[10px] text-gray-400 mt-2 font-medium">← Drag this to your bookmarks bar</span>
+          </div>
+        </div>
+
+        <div className="mt-4 flex items-start gap-2.5 bg-amber-50 border border-amber-200 rounded-lg p-3 text-xs text-amber-800">
+          <svg className="w-4 h-4 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
+          <div>
+            <strong>Security Notice (CSPs):</strong> Some websites with very strict security policies (like GitHub, LinkedIn, or Google Search) block external scripts from loading via bookmarklets. If the bookmarklet doesn't load on a specific site, you can install the official Chrome/Firefox extension instead.
+          </div>
         </div>
       </div>
 
