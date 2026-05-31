@@ -1,11 +1,20 @@
+import { useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 
 export default function Footer() {
+  const bookmarkletRef = useRef<HTMLAnchorElement>(null);
+
   const getBookmarkletUrl = () => {
     if (typeof window === 'undefined') return '#';
     const origin = window.location.origin;
     return `javascript:(function(){if(window.SnakeyInjected)return;window.SnakeyInjected=true;var%20css=document.createElement('link');css.rel='stylesheet';css.href='${origin}/bookmarklet/index.css';document.head.appendChild(css);var%20js=document.createElement('script');js.src='${origin}/bookmarklet/index.js';document.body.appendChild(js);})()`;
   };
+
+  useEffect(() => {
+    if (bookmarkletRef.current) {
+      bookmarkletRef.current.href = getBookmarkletUrl();
+    }
+  }, []);
 
   return (
     <motion.div
@@ -80,7 +89,8 @@ export default function Footer() {
 
           <div className="flex flex-col items-center justify-center shrink-0 w-full lg:w-auto">
             <a
-              href={getBookmarkletUrl()}
+              ref={bookmarkletRef}
+              href="#"
               draggable="true"
               onClick={(e) => {
                 e.preventDefault();
