@@ -1,8 +1,18 @@
 import Phaser from 'phaser';
 
+export type DomBodyType = 'char' | 'media' | 'wall' | 'cardWall' | 'finalTarget';
+
+export interface IDomBody {
+  element: HTMLElement;
+  body: Phaser.Geom.Rectangle;
+  id: string;
+  hasBeenEaten: boolean;
+  type: DomBodyType;
+}
+
 export class DomManager {
   private scene: Phaser.Scene;
-  private domBodies: { element: HTMLElement, body: Phaser.Geom.Rectangle, id: string, hasBeenEaten: boolean }[] = [];
+  private domBodies: IDomBody[] = [];
   
   constructor(scene: Phaser.Scene) {
     this.scene = scene;
@@ -33,7 +43,7 @@ export class DomManager {
       const parent = textNode.parentNode as HTMLElement;
       if (!parent) return;
 
-      // Skip elements that shouldn't be eaten (canvas overlay, dummy container, scripts)
+      // Skip elements that shouldn't be eaten
       if (parent.closest('script, style, noscript, .fixed.inset-0, #game-container-shell')) return;
       
       const rect = parent.getBoundingClientRect();
@@ -53,7 +63,6 @@ export class DomManager {
           span.textContent = char;
           span.className = 'edible-char';
           span.style.transition = 'all 0.3s ease';
-          // Ensure it can be transformed and measured properly, but keep layout inline
           span.style.display = 'inline-block';
           fragment.appendChild(span);
           hasValidChar = true;
@@ -75,7 +84,8 @@ export class DomManager {
         element: el as HTMLElement,
         body: new Phaser.Geom.Rectangle(rect.left + window.scrollX, rect.top + window.scrollY, rect.width, rect.height),
         id: `char-${index}`,
-        hasBeenEaten: false
+        hasBeenEaten: false,
+        type: 'char'
       });
     });
 
@@ -92,7 +102,8 @@ export class DomManager {
         element: el as HTMLElement,
         body: new Phaser.Geom.Rectangle(rect.left + window.scrollX, rect.top + window.scrollY, rect.width, rect.height),
         id: `media-${index}`,
-        hasBeenEaten: false
+        hasBeenEaten: false,
+        type: 'media'
       });
     });
 
@@ -121,8 +132,8 @@ export class DomManager {
           body: wall,
           id: `wall-${idx}`,
           hasBeenEaten: false,
-          isWall: true
-        } as any);
+          type: 'wall'
+        });
       });
     }
       
@@ -154,8 +165,8 @@ export class DomManager {
           body: wall,
           id: `card-${index}-wall-${wIdx}`,
           hasBeenEaten: false,
-          isCardWall: true
-        } as any);
+          type: 'cardWall'
+        });
       });
     });
   }
@@ -169,8 +180,8 @@ export class DomManager {
     });
   }
 
-  public checkCollisions(headRect: Phaser.Geom.Rectangle): { element: HTMLElement, body: Phaser.Geom.Rectangle }[] {
-    const hits: { element: HTMLElement, body: Phaser.Geom.Rectangle }[] = [];
+  public checkCollisions(headRect: Phaser.Geom.Rectangle): IDomBody[] {
+    const hits: IDomBody[] = [];
     for (const item of this.domBodies) {
       if (!item.hasBeenEaten && Phaser.Geom.Intersects.RectangleToRectangle(item.body, headRect)) {
         item.hasBeenEaten = true;
@@ -180,6 +191,37 @@ export class DomManager {
     return hits;
   }
   
+  public eatElement(item: IDomBody) {
+    if (item.type === 'wall') {
+      item.element.style.transform = 'scale(0) rotate(90deg)';
+      item.element.style.opacity = '0';
+      // Mark all wall segments of this container as eaten to avoid duplicate animations
+      this.domBodies.filter(b => b.type === 'wall' && b.element === item.element).forEach(b => b.hasBeenEaten = true);
+    } else if (item.type === 'cardWall') {
+      item.element.style.background = 'transparent';
+      item.element.style.borderColor = 'transparent';
+      item.element.style.boxShadow = 'none';
+      // Mark all wall segments of this card as eaten
+      this.domBodies.filter(b => b.type === 'cardWall' && b.element === item.element).forEach(b => b.hasBeenEaten = true);
+    } else if (item.type === 'finalTarget') {
+      item.element.style.transform = 'scale(0) rotate(180deg)';
+      item.element.style.opacity = '0';
+      setTimeout(() => {
+        item.element.style.visibility = 'hidden';
+      }, 500);
+    } else {
+      item.element.style.transform = 'scale(0) translateY(-20px) rotate(180deg)';
+      item.element.style.opacity = '0';
+      setTimeout(() => {
+        item.element.style.visibility = 'hidden';
+      }, 500);
+    }
+  }
+
+  public addBody(body: IDomBody) {
+    this.domBodies.push(body);
+  }
+
   public getRemainingCount() {
     return this.domBodies.filter(i => !i.hasBeenEaten).length;
   }
