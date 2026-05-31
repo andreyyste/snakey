@@ -1,16 +1,60 @@
-# React + Vite
+# 🐍 Snakey - Escape The Matrix
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A modern twist on the classic Snake game, built with **React**, **Vite**, **Tailwind CSS**, and **Phaser 3**.
+What starts as a simple, confined 800x600 arcade game quickly turns into an interactive web-breaking experience where the snake breaks out of its canvas and consumes the actual DOM elements of the website.
 
-Currently, two official plugins are available:
+![Demo](https://via.placeholder.com/800x400.png?text=Snakey+-+Escape+The+Matrix)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## ✨ Features
 
-## React Compiler
+- **Classic Gameplay**: A polished retro snake experience with smooth grid-based movement and responsive controls.
+- **Escape Mode**: Upon reaching a score of 100, the mysterious **Red Pill** appears. Eating it shatters the boundaries of the canvas, allowing the snake to roam freely across the entire webpage.
+- **DOM Eater**: The snake gains the ability to physically eat HTML elements (text characters, cards, icons). Powered by a custom `DomManager` that dynamically maps DOM nodes to Phaser physics bodies!
+- **Dynamic Content Support**: Modify or add any text/components to the React website; the game will automatically detect and make them edible without any extra configuration.
+- **Cinematic Finale**: Once the entire webpage is devoured, a unique "Web Broke" sequence kicks in, spinning and shattering the remaining root layout before resetting.
+- **Modern Stack**: Lightning fast HMR with Vite, beautiful layout with Tailwind CSS, and robust game loops with Phaser 3.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## 🚀 Getting Started
 
-## Expanding the ESLint configuration
+### Prerequisites
+Make sure you have [Node.js](https://nodejs.org/) installed on your machine.
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+### Installation
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/andreyyste/snakey.git
+   cd snakey
+   ```
+
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
+
+3. **Start the development server**
+   ```bash
+   npm run dev
+   ```
+
+4. **Play!**
+   Open `http://localhost:5173` in your browser. Use the **Arrow Keys** or **WASD** to control the snake.
+
+## 🏗️ Architecture & Refactoring
+
+The game's source code is structured with a strong emphasis on clean architecture and separation of concerns:
+- **`SnakeScene.ts`**: The main director orchestrating game states.
+- **`InputManager.ts`**: Handles complex keyboard logic cleanly.
+- **`DomManager.ts`**: The bridge between Phaser's physics engine and React's DOM nodes. It parses the DOM tree, injects `edible-char` spans, and synchronizes positions.
+- **`Food.ts` / `Snake.ts`**: Core game entities encapsulating their own collision, movement, and visual logic.
+
+## 🛠️ Built With
+
+- [React 18](https://reactjs.org/)
+- [Vite](https://vitejs.org/)
+- [Phaser 3](https://phaser.io/)
+- [Tailwind CSS](https://tailwindcss.com/)
+- [TypeScript](https://www.typescriptlang.org/)
+
+## 📜 License
+This project is open-source and available under the MIT License.
