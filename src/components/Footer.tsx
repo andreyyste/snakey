@@ -117,6 +117,111 @@ export default function Footer() {
         </div>
       </div>
 
+      {/* Extension Download Section (Full width) */}
+      <div className="bg-white p-8 rounded-2xl shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)] border border-gray-100 md:col-span-2 relative overflow-hidden group">
+        <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-50 to-emerald-50 rounded-bl-full -z-10 group-hover:scale-110 transition-transform duration-500"></div>
+
+        <div className="w-10 h-10 bg-emerald-50 text-emerald-600 rounded-lg flex items-center justify-center mb-4">
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+          </svg>
+        </div>
+
+        <h2 className="text-2xl font-bold mb-3 text-gray-900">Download Snakey Extension</h2>
+        <p className="text-gray-600 leading-relaxed text-sm mb-6">
+          Untuk pengalaman bermain yang lancar dan permanen di semua situs web (termasuk GitHub, LinkedIn, dan Google Search yang memiliki proteksi keamanan ketat), Anda dapat mengunduh dan memasang ekstensi browser Snakey secara langsung.
+        </p>
+
+        {/* Browser Tabs/Columns for Chrome/Chromium and Firefox */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Chromium Section */}
+          <div className="bg-slate-50 p-6 rounded-xl border border-slate-100 flex flex-col justify-between">
+            <div>
+              <div className="flex items-center gap-2 mb-3">
+                <span className="text-lg">🌐</span>
+                <h3 className="font-bold text-gray-800 text-base">Google Chrome / Chromium</h3>
+              </div>
+              <p className="text-xs text-gray-500 mb-4">
+                Kompatibel dengan Google Chrome, Microsoft Edge, Brave, Opera, dan browser berbasis Chromium lainnya.
+              </p>
+              <h4 className="font-semibold text-xs text-gray-700 mb-2">Langkah Pemasangan:</h4>
+              <ol className="list-decimal list-inside text-xs text-gray-600 space-y-2 mb-6">
+                <li>Unduh file ekstensi <strong className="text-slate-800">snakey-chrome.zip</strong> menggunakan tombol di bawah.</li>
+                <li>Ekstrak file ZIP tersebut ke sebuah folder di komputer Anda.</li>
+                <li>Buka halaman ekstensi browser dengan mengetik <code className="bg-slate-200 px-1.5 py-0.5 rounded font-mono text-[11px] text-indigo-600">chrome://extensions</code> di address bar.</li>
+                <li>Aktifkan opsi <strong className="text-slate-800">Developer Mode</strong> (Mode Pengembang) di sudut kanan atas.</li>
+                <li>Klik tombol <strong className="text-slate-800">Load unpacked</strong> (Muat yang belum dikemas) di sudut kiri atas.</li>
+                <li>Pilih folder hasil ekstrak tadi (folder yang berisi file <code className="font-mono text-[11px]">manifest.json</code>).</li>
+                <li>Selesai! Klik ikon ekstensi di pojok kanan atas browser dan sematkan (pin) Snakey untuk akses cepat.</li>
+              </ol>
+            </div>
+            <a
+              href="/extension/snakey-chrome.zip"
+              download
+              className="inline-flex items-center justify-center gap-2 w-full py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold rounded-xl shadow-md transition-all text-xs border border-indigo-400/20"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
+              Unduh Ekstensi Chrome (.zip)
+            </a>
+          </div>
+
+          {/* Firefox Section */}
+          <div className="bg-slate-50 p-6 rounded-xl border border-slate-100 flex flex-col justify-between">
+            <div>
+              <div className="flex items-center gap-2 mb-3">
+                <span className="text-lg">🦊</span>
+                <h3 className="font-bold text-gray-800 text-base">Mozilla Firefox</h3>
+              </div>
+              <p className="text-xs text-gray-500 mb-4">
+                Kompatibel dengan semua versi desktop Mozilla Firefox.
+              </p>
+              <h4 className="font-semibold text-xs text-gray-700 mb-2">Langkah Pemasangan:</h4>
+              <ol className="list-decimal list-inside text-xs text-gray-600 space-y-2 mb-6">
+                <li>Unduh file ekstensi <strong className="text-slate-800">snakey-firefox.zip</strong> menggunakan tombol di bawah.</li>
+                <li>Buka Firefox lalu ketik <code className="bg-slate-200 px-1.5 py-0.5 rounded font-mono text-[11px] text-orange-600">about:debugging</code> di address bar.</li>
+                <li>Klik menu <strong className="text-slate-800">This Firefox</strong> (Firefox Ini) di panel sebelah kiri.</li>
+                <li>Klik tombol <strong className="text-slate-800">Load Temporary Add-on...</strong> (Muat Pengaya Sementara...).</li>
+                <li>Pilih file ZIP yang baru saja Anda unduh.</li>
+                <li>Selesai! Ekstensi Snakey akan aktif dan siap dimainkan dengan mengklik ikonnya.</li>
+                <li className="text-amber-700 font-medium list-none mt-2 text-[11px] bg-amber-50 p-2 rounded border border-amber-100">
+                  ⚠️ <em>Catatan Firefox: Ekstensi sementara ini akan otomatis terhapus saat Firefox ditutup. Anda perlu memuatnya kembali saat membuka ulang browser.</em>
+                </li>
+              </ol>
+            </div>
+            <a
+              href="/extension/snakey-firefox.zip"
+              download
+              className="inline-flex items-center justify-center gap-2 w-full py-3 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-bold rounded-xl shadow-md transition-all text-xs border border-orange-400/20"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
+              Unduh Ekstensi Firefox (.zip)
+            </a>
+          </div>
+        </div>
+
+        {/* Detailed Permissions Clarification */}
+        <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4 text-xs text-blue-800">
+          <div className="flex gap-2.5 items-start">
+            <svg className="w-5 h-5 shrink-0 text-blue-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <div>
+              <h4 className="font-bold text-gray-800 mb-1">Informasi Hak Akses (Permissions Info):</h4>
+              <p className="text-gray-600 mb-2 leading-relaxed">
+                Saat memasang ekstensi ini, browser Anda mungkin menampilkan peringatan bahwa ekstensi membutuhkan izin untuk <strong>"membaca dan mengubah semua data Anda pada semua situs web"</strong>.
+              </p>
+              <p className="text-gray-600 leading-relaxed">
+                Izin ini <strong>sepenuhnya aman</strong> dan diperlukan oleh Snakey untuk mendeteksi elemen-elemen HTML di halaman situs web yang sedang Anda kunjungi (sebagai target makanan ular) serta menampilkan canvas game di atas konten situs tersebut secara mulus. Ekstensi ini berjalan 100% secara lokal di browser Anda dan <strong>tidak akan pernah merekam atau mengirimkan informasi pribadi apa pun</strong> ke server eksternal.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Sandbox Playground (Full width) */}
       <div className="bg-white p-8 rounded-2xl shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)] border border-gray-100 md:col-span-2">
         <div className="w-10 h-10 bg-purple-50 text-purple-600 rounded-lg flex items-center justify-center mb-4">
