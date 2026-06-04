@@ -161,7 +161,9 @@ export default function Footer() {
           <div className="bg-white/30 p-6 rounded-2xl border border-white/50 flex flex-col justify-between shadow-sm">
             <div>
               <div className="flex items-center gap-2.5 mb-4">
-                <span className="text-xl">🌐</span>
+                <svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 fill-current text-blue-600">
+                  <path d="M12 0C5.373 0 0 5.373 0 12c0 6.627 5.373 12 12 12 6.627 0 12-5.373 12-12C24 5.373 18.627 0 12 0zm5.664 6.377l-2.454 4.249H8.805l-2.455-4.249H17.664zm-9.742.668l3.18 5.508 1.59 2.755H6.257L4.172 7.749h3.75zm10.375 0l2.086 3.612-2.086 3.612h-3.75l-1.59-2.755 3.18-5.508h.086zm-4.75 6.755l-1.59 2.755-1.59 2.755-2.086-3.612 2.086-3.612h3.75z"/>
+                </svg>
                 <h3 className="font-bold text-gray-800 text-base">Google Chrome / Chromium</h3>
               </div>
               <p className="text-xs text-gray-500 mb-6 leading-relaxed">
@@ -192,7 +194,9 @@ export default function Footer() {
           <div className="bg-white/30 p-6 rounded-2xl border border-white/50 flex flex-col justify-between shadow-sm">
             <div>
               <div className="flex items-center gap-2.5 mb-4">
-                <span className="text-xl">🦊</span>
+                <svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 fill-current text-orange-500">
+                  <path d="M12 0C5.373 0 0 5.373 0 12c0 6.627 5.373 12 12 12 6.627 0 12-5.373 12-12C24 5.373 18.627 0 12 0zm1.75 22.09c-4.406 0-8.25-2.408-10.347-6.002 0 0 5.564-1.922 7.218-5.656 0 0-2.812 3.656-7.875 3.188 0 0 3.75-8.906 10.312-11.719 0 0 1.25 4.531.063 7.5 0 0 4.844-2.156 5.844 2.812 0 0-2.344-1.25-3.344 1.094 0 0 3.75 1.094 2.344 5.594C18.844 20.371 16.219 22.09 13.75 22.09z"/>
+                </svg>
                 <h3 className="font-bold text-gray-800 text-base">Mozilla Firefox</h3>
               </div>
               <p className="text-xs text-gray-500 mb-6 leading-relaxed">
