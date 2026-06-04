@@ -3,8 +3,6 @@ import { CANVAS_WIDTH, CANVAS_HEIGHT } from '../constants';
 
 export class GameUI {
   private scene: Phaser.Scene;
-  private scoreText!: Phaser.GameObjects.Text;
-  private scoreContainer!: Phaser.GameObjects.Container;
   private gameOverContainer!: Phaser.GameObjects.Container;
 
   constructor(scene: Phaser.Scene) {

@@ -23,6 +23,7 @@ export class DomManager {
   private domBodies: IDomBody[] = [];
   private observer: MutationObserver | null = null;
   private isScanning: boolean = false;
+  private resizeTimeout: any = null;
   
   constructor(scene: Phaser.Scene) {
     this.scene = scene;
@@ -82,7 +83,12 @@ export class DomManager {
    * Forces a fresh tree scan and updates all coordinate rectangles.
    */
   private onResize = () => {
-    this.scanDomElements();
+    if (this.resizeTimeout) {
+      clearTimeout(this.resizeTimeout);
+    }
+    this.resizeTimeout = setTimeout(() => {
+      this.scanDomElements();
+    }, 200);
   }
 
   /**
@@ -165,6 +171,10 @@ export class DomManager {
     if (this.observer) {
       this.observer.disconnect();
       this.observer = null;
+    }
+    if (this.resizeTimeout) {
+      clearTimeout(this.resizeTimeout);
+      this.resizeTimeout = null;
     }
   }
 }
