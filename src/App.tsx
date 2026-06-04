@@ -73,7 +73,9 @@ function App() {
               onClick={handlePlay}
               className="w-full h-full flex items-center justify-center text-lg font-bold tracking-wide text-white bg-gradient-to-r from-primary via-[#5c85ff] to-secondary hover:opacity-95 transition-all cursor-pointer outline-none gap-2 border border-white/20 play-btn-glow"
             >
-              <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>play_arrow</span>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+                <path d="M8 5.14v14c0 .86.94 1.36 1.66.9l10-7a1 1 0 000-1.8l-10-7A1 1 0 008 5.14z" />
+              </svg>
               Play Snakey
             </motion.button>
           ) : (

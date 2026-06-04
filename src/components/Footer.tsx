@@ -25,7 +25,10 @@ export default function Footer() {
       <div className="glass-panel rounded-3xl p-8 hover:-translate-y-1 transition-all duration-300 group">
         <div className="flex items-center gap-4 mb-6">
           <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary-fixed to-[#e0e7ff] flex items-center justify-center text-primary shadow-lg border border-white/50 glow-blue group-hover:scale-105 transition-transform">
-            <span className="material-symbols-outlined text-3xl">info</span>
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-7 h-7">
+              <circle cx="12" cy="12" r="10" />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 16v-4m0-4h.01" />
+            </svg>
           </div>
           <h2 className="font-headline-md text-headline-md text-on-surface">About the Project</h2>
         </div>
@@ -43,7 +46,9 @@ export default function Footer() {
       <div className="glass-panel rounded-3xl p-8 hover:-translate-y-1 transition-all duration-300 group">
         <div className="flex items-center gap-4 mb-6">
           <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-secondary-fixed to-[#f3e8ff] flex items-center justify-center text-secondary shadow-lg border border-white/50 glow-purple group-hover:scale-105 transition-transform">
-            <span className="material-symbols-outlined text-3xl">forum</span>
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-7 h-7">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
+            </svg>
           </div>
           <h2 className="font-headline-md text-headline-md text-on-surface">Get in Touch</h2>
         </div>
@@ -54,7 +59,9 @@ export default function Footer() {
           <ul className="space-y-3 pl-0 mt-6 list-none">
             <li className="flex items-center gap-3 bg-white/40 p-2.5 rounded-xl border border-white/60 shadow-sm">
               <span className="w-8 h-8 rounded-lg bg-secondary/10 flex items-center justify-center text-secondary">
-                <span className="material-symbols-outlined text-base">mail</span>
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
               </span>
               <a href="mailto:manurungandre1927@gmail.com" className="hover:text-primary transition-colors font-medium">
                 manurungandre1927@gmail.com
@@ -62,7 +69,11 @@ export default function Footer() {
             </li>
             <li className="flex items-center gap-3 bg-white/40 p-2.5 rounded-xl border border-white/60 shadow-sm">
               <span className="w-8 h-8 rounded-lg bg-secondary/10 flex items-center justify-center text-secondary">
-                <span className="material-symbols-outlined text-base">language</span>
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
+                  <circle cx="12" cy="12" r="10" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M2 12h20" />
+                </svg>
               </span>
               <a href="https://nre.codes" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors font-medium">
                 nre.codes
@@ -70,7 +81,9 @@ export default function Footer() {
             </li>
             <li className="flex items-center gap-3 bg-white/40 p-2.5 rounded-xl border border-white/60 shadow-sm">
               <span className="w-8 h-8 rounded-lg bg-secondary/10 flex items-center justify-center text-secondary">
-                <span className="material-symbols-outlined text-base">alternate_email</span>
+                <svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 fill-current">
+                  <path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/>
+                </svg>
               </span>
               <a href="https://github.com/andreyyste" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors font-medium">
                 @andreyyste
@@ -87,7 +100,9 @@ export default function Footer() {
         
         <div className="flex items-center gap-4 mb-6">
           <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-secondary to-primary flex items-center justify-center text-white shadow-xl border border-white/30 glow-purple group-hover:scale-105 transition-transform">
-            <span className="material-symbols-outlined text-3xl">extension</span>
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-7 h-7">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M19.439 10.027c-.201-.01-.397-.074-.572-.186a1.8 1.8 0 0 1-.778-1.428V7a2 2 0 0 0-2-2h-1.413a1.8 1.8 0 0 1-1.428-.778 2.2 2.2 0 0 0-3.64 0 1.8 1.8 0 0 1-1.428.778H7a2 2 0 0 0-2 2v1.413a1.8 1.8 0 0 1-.778 1.428 2.2 2.2 0 0 0 0 3.64 1.8 1.8 0 0 1 .778 1.428V17a2 2 0 0 0 2 2h1.413a1.8 1.8 0 0 1 1.428.778 2.2 2.2 0 0 0 3.64 0 1.8 1.8 0 0 1 1.428-.778H17a2 2 0 0 0 2-2v-1.413a1.8 1.8 0 0 1 .778-1.428 2.2 2.2 0 0 0 0-3.64 1.8 1.8 0 0 1-.778-1.428Z" />
+            </svg>
           </div>
           <h2 className="font-headline-md text-headline-md text-on-surface">Snakey Bookmarklet</h2>
         </div>
@@ -117,7 +132,14 @@ export default function Footer() {
               }}
               className="bg-gradient-to-r from-secondary to-primary text-white px-8 py-4 rounded-2xl font-mono text-xs uppercase shadow-[0_10px_25px_rgba(107,56,212,0.3)] hover:shadow-[0_15px_35px_rgba(107,56,212,0.4)] hover:-translate-y-0.5 active:translate-y-0 transition-all flex items-center gap-2 cursor-grab active:cursor-grabbing border border-white/20"
             >
-              <span className="material-symbols-outlined">drag_indicator</span>
+              <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" className="w-4 h-4">
+                <circle cx="9" cy="5" r="1.5" />
+                <circle cx="9" cy="12" r="1.5" />
+                <circle cx="9" cy="19" r="1.5" />
+                <circle cx="15" cy="5" r="1.5" />
+                <circle cx="15" cy="12" r="1.5" />
+                <circle cx="15" cy="19" r="1.5" />
+              </svg>
               Play Snakey
             </a>
             <span className="text-[10px] text-gray-400 mt-2.5 font-medium">← Drag this to your bookmarks bar</span>
@@ -129,7 +151,9 @@ export default function Footer() {
           <div className="absolute -right-8 -top-8 w-32 h-32 bg-orange-400/5 rounded-full blur-2xl"></div>
           <div className="flex items-start gap-4 relative z-10">
             <div className="w-10 h-10 rounded-full bg-orange-500/10 flex items-center justify-center text-orange-600 shrink-0">
-              <span className="material-symbols-outlined text-lg">security</span>
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.57-.598-3.75h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+              </svg>
             </div>
             <div className="space-y-1.5 pt-1">
               <h4 className="font-bold text-on-surface text-xs">Security Note (CSPs)</h4>
@@ -147,7 +171,9 @@ export default function Footer() {
 
         <div className="flex items-center gap-4 mb-6">
           <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-teal-500/10 flex items-center justify-center text-emerald-600 shadow-lg border border-white/50 glow-blue">
-            <span className="material-symbols-outlined text-3xl">download</span>
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-7 h-7">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+            </svg>
           </div>
           <h2 className="font-headline-md text-headline-md text-on-surface">Download Snakey Extension</h2>
         </div>
@@ -185,7 +211,9 @@ export default function Footer() {
               download
               className="w-full bg-gradient-to-r from-primary to-[#004395] text-white py-4 rounded-2xl font-mono text-xs uppercase hover:shadow-lg hover:shadow-primary/30 transition-all flex justify-center items-center gap-2 border border-primary/20"
             >
-              <span className="material-symbols-outlined text-base">download</span>
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+              </svg>
               Unduh Ekstensi Chrome (.zip)
             </a>
           </div>
@@ -220,7 +248,9 @@ export default function Footer() {
               download
               className="w-full bg-gradient-to-r from-secondary to-[#5516be] text-white py-4 rounded-2xl font-mono text-xs uppercase hover:shadow-lg hover:shadow-secondary/30 transition-all flex justify-center items-center gap-2 border border-secondary/20"
             >
-              <span className="material-symbols-outlined text-base">download</span>
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+              </svg>
               Unduh Ekstensi Firefox (.zip)
             </a>
           </div>
@@ -231,7 +261,10 @@ export default function Footer() {
           <div className="absolute right-0 top-0 w-32 h-32 bg-primary/5 rounded-full blur-2xl"></div>
           <div className="flex items-start gap-4 relative z-10">
             <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary shrink-0">
-              <span className="material-symbols-outlined text-xl">info</span>
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
+                <circle cx="12" cy="12" r="10" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 16v-4m0-4h.01" />
+              </svg>
             </div>
             <div className="space-y-1.5 pt-1">
               <h4 className="font-bold text-on-surface text-xs">Informasi Hak Akses (Permissions Info)</h4>
@@ -247,7 +280,9 @@ export default function Footer() {
       <div className="md:col-span-2 glass-panel rounded-3xl p-8 hover:-translate-y-1 transition-all duration-300 group">
         <div className="flex items-center gap-4 mb-6">
           <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-100 to-indigo-100 flex items-center justify-center text-purple-600 shadow-lg border border-white/50 glow-purple group-hover:scale-105 transition-transform">
-            <span className="material-symbols-outlined text-3xl">science</span>
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-7 h-7">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M10 2v8L4.36 19.4A2 2 0 006.06 22h11.88a2 2 0 001.7-2.6L14 10V2M6 12h12M9 2h6" />
+            </svg>
           </div>
           <h2 className="font-headline-md text-headline-md text-on-surface">Sandbox Playground</h2>
         </div>
