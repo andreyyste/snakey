@@ -1,16 +1,30 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Game from './Game';
 import Header from './components/Header';
 import Footer from './components/Footer';
 
+function ScoreDisplay() {
+  const [score, setScore] = useState(0);
+
+  useEffect(() => {
+    const handleUpdate = (e: Event) => {
+      setScore((e as CustomEvent).detail);
+    };
+    window.addEventListener('snakey-score-update', handleUpdate);
+    return () => {
+      window.removeEventListener('snakey-score-update', handleUpdate);
+    };
+  }, []);
+
+  return <span className="text-2xl font-bold text-slate-800 tracking-tight">{score}</span>;
+}
+
 function App() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
-  const [score, setScore] = useState(0);
 
   const handlePlay = () => {
-    setScore(0);
     setIsPlaying(true);
   };
 
@@ -39,7 +53,7 @@ function App() {
             className="mb-6 z-20 flex items-center gap-3 bg-white/70 backdrop-blur-md px-6 py-2.5 rounded-full shadow-lg border border-white/80 shrink-0"
           >
             <div className="w-4 h-4 rounded-full bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.7)]"></div>
-            <span className="text-2xl font-bold text-slate-800 tracking-tight">{score}</span>
+            <ScoreDisplay />
           </motion.div>
         )}
       </AnimatePresence>
@@ -93,7 +107,7 @@ function App() {
                 >
                   ✕
                 </button>
-                <Game onScoreUpdate={setScore} />
+                <Game />
               </motion.div>
             )
           )}

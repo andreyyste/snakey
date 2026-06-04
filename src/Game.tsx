@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import Phaser from 'phaser';
 import { SnakeScene } from './game/SnakeScene';
 
-export default function Game({ onScoreUpdate }: { onScoreUpdate: (score: number) => void }) {
+export default function Game() {
   const gameRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -25,13 +25,10 @@ export default function Game({ onScoreUpdate }: { onScoreUpdate: (score: number)
 
     const game = new Phaser.Game(config);
 
-    game.events.on('score-update', onScoreUpdate);
-
     return () => {
-      game.events.off('score-update', onScoreUpdate);
       game.destroy(true);
     };
-  }, [onScoreUpdate]);
+  }, []);
 
   return <div ref={gameRef} id="phaser-game-container" className="w-full h-full relative flex items-center justify-center overflow-hidden" />;
 }

@@ -10,6 +10,7 @@ export class Snake {
   private scene: Phaser.Scene;
   private segments: Phaser.GameObjects.Image[] = [];
   private logicalPositions: Phaser.Math.Vector2[] = [];
+  private pendingGrowths: number = 0;
   public direction: Phaser.Math.Vector2 = new Phaser.Math.Vector2(1, 0);
   public nextDirection: Phaser.Math.Vector2 = new Phaser.Math.Vector2(1, 0);
   public stepSize: number = GRID_SIZE;
@@ -43,6 +44,7 @@ export class Snake {
     this.direction.set(1, 0);
     this.nextDirection.set(1, 0);
     this.stepSize = GRID_SIZE;
+    this.pendingGrowths = 0;
   }
 
   /**
@@ -57,6 +59,13 @@ export class Snake {
    */
   public getHead() {
     return this.segments[0];
+  }
+
+  /**
+   * Returns logical position vectors of all segments.
+   */
+  public getLogicalPositions() {
+    return this.logicalPositions;
   }
 
   /**
@@ -149,6 +158,12 @@ export class Snake {
     else if (this.direction.y === 1) head.setAngle(90);
     else if (this.direction.y === -1) head.setAngle(-90);
 
+    // Apply queued growths at the tail position vacated by this tick's movement
+    if (this.pendingGrowths > 0) {
+      this.grow(tailOldX, tailOldY);
+      this.pendingGrowths--;
+    }
+
     return { dead: false, newX, newY, tailOldX, tailOldY };
   }
 
@@ -162,7 +177,10 @@ export class Snake {
     this.segments.push(newSegment);
   }
 
-  public fatten() {
-    // Disabled as requested
+  /**
+   * Queues segment growths to be processed progressively over the next moves.
+   */
+  public queueGrow(count: number = 1) {
+    this.pendingGrowths += count;
   }
 }
