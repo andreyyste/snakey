@@ -1,12 +1,61 @@
 @import "tailwindcss";
 
-body {
-  margin: 0;
-  background-color: #f9fafb; /* gray-50 */
-  color: #111827; /* gray-900 */
+@theme {
+  --color-primary: #0058be;
+  --color-secondary: #6b38d4;
+  --color-on-surface: #191c1e;
+  --color-on-surface-variant: #424754;
+  --color-surface-variant: #e0e3e5;
+  --color-primary-fixed: #d8e2ff;
+  --color-secondary-fixed: #e9ddff;
+  --color-outline-variant: #c2c6d6;
+  
+  --font-sans: 'Plus Jakarta Sans', ui-sans-serif, system-ui;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular;
 }
 
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+}
 
+.glass-panel {
+  background: rgba(255, 255, 255, 0.45);
+  backdrop-filter: blur(40px);
+  -webkit-backdrop-filter: blur(40px);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03), inset 0 0 0 1px rgba(255, 255, 255, 0.5);
+}
+
+.play-btn-glow {
+  box-shadow: 0 0 40px rgba(0, 88, 190, 0.25), inset 0 0 20px rgba(255, 255, 255, 0.5);
+}
+
+.gradient-text {
+  background: linear-gradient(135deg, #0058be 0%, #8455ef 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.bg-mesh-pattern {
+  background-color: #f7f9fb;
+  background-image: radial-gradient(at 40% 20%, rgba(216, 226, 255, 0.6) 0px, transparent 50%),
+                    radial-gradient(at 80% 0%, rgba(233, 221, 255, 0.6) 0px, transparent 50%),
+                    radial-gradient(at 0% 50%, rgba(172, 237, 255, 0.6) 0px, transparent 50%);
+  background-attachment: fixed;
+}
+
+.glow-blue {
+  box-shadow: 0 0 20px rgba(0, 88, 190, 0.15);
+}
+
+.glow-purple {
+  box-shadow: 0 0 20px rgba(132, 85, 239, 0.15);
+}
+
+.glow-orange {
+  box-shadow: 0 0 20px rgba(217, 119, 6, 0.15);
+}
 
 #game-container-shell canvas,
 #phaser-game-container canvas {
